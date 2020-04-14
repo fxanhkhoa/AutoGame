@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:visibility="visible">
+
+
+    <ImageView
+        android:id="@+id/fabHead"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@android:drawable/btn_radio" />
+
+    <ImageView
+        android:id="@+id/closeButton"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginLeft="-13dp"
+        android:layout_marginTop="0dp"
+        android:layout_toRightOf="@+id/fabHead"
+        android:src="@android:drawable/btn_minus" />
+
+    <ImageView
+        android:id="@+id/autoHit"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginLeft="-13dp"
+        android:layout_marginTop="30dp"
+        android:layout_toRightOf="@+id/fabHead"
+        android:src="@android:drawable/btn_star_big_on" />
+
+
+</RelativeLayout>

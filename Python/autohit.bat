@@ -1,0 +1,1 @@
+python autohit.py
