@@ -14,6 +14,7 @@ def click_and_crop(event, x, y, flags, param):
 	if event == cv2.EVENT_LBUTTONDOWN:
 		refPt = [(x, y)]
 		cropping = True
+		print(x,y)
 	# check to see if the left mouse button was released
 	elif event == cv2.EVENT_LBUTTONUP:
 		# record the ending (x, y) coordinates and indicate that
