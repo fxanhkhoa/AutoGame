@@ -20,10 +20,10 @@ def click_and_crop(event, x, y, flags, param):
         arr = []
         arr2 = []
         print(image.shape)
-        for i in range(455, 505):
+        for i in range(341, 351):
             #print(image[584][i])
-            arr.append(image[584][i])
-            # cv2.circle(image,(i, 694), 10, (255,0,255))
+            arr.append(image[312][i])
+            # cv2.circle(image,(i, 300), 10, (255,0,255))
         # print(arr)
         # print("==============")
         # for i in range(455, 505):
