@@ -4,41 +4,101 @@ import subprocess
 import os
 import cv2
 import numpy as np
+from ultility.check_match_done import check_match_done
 
 class memu_process_class (threading.Thread):
     
     process_running = True
     flag_exist_GET_MORE = False
 
-    def __init__(self, threadID):
+    def __init__(self, threadID, pic_folder):
         threading.Thread.__init__(self)
         self.threadID = threadID
+        self.pic_folder = pic_folder
+        self.try_count = 0
+        self.try_count_when_auto_hit = 0
+
+        self.mode_arena = 2
+
+        self.check_match_done_thread = check_match_done(threadID, pic_folder)
+        self.check_match_done_thread.start()
     
     def run(self):
-        self.go_to_home()
-        if not self.process_running:
-            return
-        self.go_to_fight()
-        if not self.process_running:
-            return
-        self.go_to_arena()
-        if not self.process_running:
-            return
-        self.click_continue_arena_3vs_3()
-        if not self.process_running:
-            return
         while (self.process_running):
+            if self.mode_arena == -2:
+                self.mode_arena = 2
+            print("DEBUG === MODE ARENA", self.mode_arena)
+            self.try_count = 0
+            # 1st time for open connect
+            self.go_to_home()
+            if not self.process_running:
+                return
+            ######### Opened
+            self.go_to_home()
+            if not self.process_running:
+                return
             
+            while not self.check_FIGHT_BUTTON():
+                self.try_count = self.try_count + 1
+                if (self.try_count > 7):
+                    break
+                if not self.process_running:
+                    return
+
+            self.go_to_fight()
+            if not self.process_running:
+                return
+
+            while not self.check_PLAY_ARENA():
+                self.try_count = self.try_count + 1
+                if (self.try_count > 7):
+                    break
+                if not self.process_running:
+                    return
+
+            self.go_to_arena()
+            if not self.process_running:
+                return
+            #### PART GO TO ARENA WITH MODE
+            while not self.check_MULTIVERSE_ARENAS():
+                self.try_count = self.try_count + 1
+                if (self.try_count > 7):
+                    break
+                if not self.process_running:
+                    return
+
+            if (self.mode_arena == -1):
+                self.click_continue_arena_3vs_3_3star()
+                if not self.process_running:
+                    return
+            else:
+                for i in range(0, self.mode_arena):
+                    self.swipe_to_another_arena_mode()
+                    self.swipe_to_another_arena_mode()
+                time.sleep(1)
+                self.click_continue_arena_3vs_3_3star()
+                if not self.process_running:
+                    return
+
+
+            #### END ####
+
             self.check_GET_MORE()
             if not self.process_running:
                 return
             
             while (self.check_GET_HELP_and_CLICK()):
+                self.try_count = self.try_count + 1
+                if (self.try_count > 7):
+                    break
                 if not self.process_running:
                     return
                 time.sleep(0.5)
 
             while (not self.check_FIND_MATCH()):
+                self.try_count = self.try_count + 1
+                if (self.try_count > 7):
+                    break
                 self.pick_hero()
                 if not self.process_running:
                     return
@@ -47,72 +107,115 @@ class memu_process_class (threading.Thread):
             if not self.process_running:
                 return
 
+            time.sleep(2)
+
             while (not self.check_CONTINUE()):
-                pass
+                self.try_count = self.try_count + 1
+                if (self.try_count > 10):
+                    break
+                if not self.process_running:
+                    return
 
             self.click_CONTINUE()
             if not self.process_running:
                 return
+            time.sleep(2)
 
             while (not self.check_ACCEPT):
-                pass
+                self.try_count = self.try_count + 1
+                if (self.try_count > 10):
+                    break
+                if not self.process_running:
+                    return
 
             self.click_ACCEPT()
             if not self.process_running:
                 return
+            time.sleep(2)
 
             while (not self.check_CONTINUE()):
-                pass
+                self.try_count = self.try_count + 1
+                if (self.try_count > 10):
+                    break
+                if not self.process_running:
+                    return
 
             self.click_CONTINUE()
             if not self.process_running:
                 return
+            time.sleep(2)
 
-            # 1st FIGHT
-            print("DEBUG === 1st FIGHT")
-            while (not self.check_VIEW_MATCHUP()):
-                self.auto_hit()
-                if not self.process_running:
-                    return
+            # # 1st FIGHT
+            # print("DEBUG === 1st FIGHT")
+            # while (not self.check_VIEW_MATCHUP()):
+            #     self.auto_hit()
+            #     self.click_NEXT_SERIES()
+            #     if not self.process_running:
+            #         return
             
-            self.click_NEXT_FIGHT()
-            if not self.process_running:
-                return
+            # self.click_NEXT_FIGHT()
+            # if not self.process_running:
+            #     return
 
-            # 2nd FIGHT
-            print("DEBUG === 2nd FIGHT")
-            while (not self.check_VIEW_MATCHUP()):
-                self.auto_hit()
-                if not self.process_running:
-                    return
+            # # 2nd FIGHT
+            # print("DEBUG === 2nd FIGHT")
+            # while (not self.check_VIEW_MATCHUP()):
+            #     self.auto_hit()
+            #     self.click_NEXT_SERIES()
+            #     if not self.process_running:
+            #         return
 
-            self.click_NEXT_FIGHT()
-            if not self.process_running:
-                return
+            # self.click_NEXT_FIGHT()
+            # if not self.process_running:
+            #     return
 
             # 3rd FIGHT ===> Some case stuck here because of cannot click next match
-            print("DEBUG === 3rd FIGHT")
-            while (not self.check_CONTINUE()):
-                self.auto_hit()
-                self.click_NEXT_FIGHT()
+            if self.try_count < 7:
+                self.try_count_when_auto_hit = 0
+                print("DEBUG === 3rd FIGHT")
+                self.check_match_done_thread.start_check()
+                while (not self.check_match_done_thread.get_done_status()):
+                    print(self.check_match_done_thread.get_done_status())
+                    self.auto_hit()
+                    self.click_NEXT_FIGHT()
+                    self.try_count = self.try_count_when_auto_hit + 1
+                    print("Try:", self.try_count_when_auto_hit)
+                    if (self.try_count > 30):
+                        break
+                    if not self.process_running:
+                        return
+                
+                time.sleep(1)
+                self.click_NEXT_SERIES()
                 if not self.process_running:
                     return
 
-            self.click_NEXT_SERIES()
-            if not self.process_running:
-                return
+                self.click_claim_achive()
+                time.sleep(1)
+                
+                time.sleep(1)
+                self.click_CONTINUE()
+                if not self.process_running:
+                    return
             
             time.sleep(3)
+            self.check_match_done_thread.stop_check()
+            if self.try_count > 7:
+                self.mode_arena = self.mode_arena - 1
+
 
     def stop_thread(self):
         self.process_running = False
+        self.check_match_done_thread.stop_check()
 
     def go_to_home(self):
+        if (self.try_count > 7):
+            return
         print("DEBUG === GO TO HOME")
         # Click Menu Button
         cmd = 'memuc adb -i {} "shell input tap 250 50"'.format(self.threadID)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        time.sleep(2)
+        time.sleep(3)
 
         # Click Home
         cmd = 'memuc adb -i {} "shell input tap 200 200"'.format(self.threadID)
@@ -121,6 +224,8 @@ class memu_process_class (threading.Thread):
         time.sleep(3)
     
     def go_to_fight(self):
+        if (self.try_count > 7):
+            return
         print("DEBUG === GO TO FIGHT")
         cmd = 'memuc adb -i {} "shell input tap 400 200"'.format(self.threadID)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -128,13 +233,17 @@ class memu_process_class (threading.Thread):
         time.sleep(3)
 
     def go_to_arena(self):
+        if (self.try_count > 7):
+            return
         print("DEBUG === GO TO ARENA")
         cmd = 'memuc adb -i {} "shell input tap 625 576"'.format(self.threadID)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
         time.sleep(4)
 
-    def click_continue_arena_3vs_3(self):
+    def click_continue_arena_3vs_3_3star(self):
+        if (self.try_count > 7):
+            return
         print("DEBUG === CONTINUE TO ARENA")
         cmd = 'memuc adb -i {} "shell input tap 400 631"'.format(self.threadID)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -142,10 +251,12 @@ class memu_process_class (threading.Thread):
         time.sleep(3)
 
     def check_GET_MORE(self):
+        if (self.try_count > 7):
+            return
         print("DEBUG === CHECK GET MORE")
         try:
             self.capture_image()
-            image = cv2.imread("D:/My_temporary/screen{}.png".format(self.threadID))
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
         except:
             return False
 
@@ -154,7 +265,7 @@ class memu_process_class (threading.Thread):
         print("DEBUG === CHECK GET HELP")
         try:
             self.capture_image()
-            image = cv2.imread("D:/My_temporary/screen{}.png".format(self.threadID))
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             # arr = [[ 6, 99,  4], [  6, 100,   5], [  6, 101,   6], [  6, 102,   8], [  6, 103,  11], [  6, 105,  14], [  6, 106,  17], [  6, 108,  20], [  6, 111,  22], [  6, 112,  25]]
 
@@ -230,6 +341,8 @@ class memu_process_class (threading.Thread):
             return False
 
     def pick_hero(self):
+        if (self.try_count > 10):
+            return
         print("DEBUG === PICK HERO")
         if self.flag_exist_GET_MORE:
             cmd = 'memuc adb -i {} "shell input swipe 655 357 191 129"'.format(self.threadID)
@@ -260,13 +373,13 @@ class memu_process_class (threading.Thread):
         print("DEBUG === CHECK FIND MATCH")
         try:
             self.capture_image()
-            image = cv2.imread("D:/My_temporary/screen{}.png".format(self.threadID))
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res = True
             
             arr = [[ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3]]
 
-            x = 51
-            x1 = 101
+            x = 34
+            x1 = 64
             y = 685
 
             for i in range(x, x1):
@@ -279,6 +392,8 @@ class memu_process_class (threading.Thread):
             return False
 
     def click_find_match(self):
+        if (self.try_count > 7):
+            return
         print("DEBUG === CLICK FIND MATCH")
         time.sleep(2)
         cmd = 'memuc adb -i {} "shell input tap 121 669"'.format(self.threadID)
@@ -289,7 +404,7 @@ class memu_process_class (threading.Thread):
         print("DEBUG === CHECK CONTINUE")
         try:
             self.capture_image()
-            image = cv2.imread("D:/My_temporary/screen{}.png".format(self.threadID))
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res = True
 
             arr = [[ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3]]
@@ -302,12 +417,27 @@ class memu_process_class (threading.Thread):
                     res = False
                     break
             
-            print(res)
-            return res
+            # print(res)
+
+            arr = [[ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3]]
+
+            res2 = True
+            x = 854
+            x1 = 904
+            y =  695
+            for i in range(x, x1):
+                if image[y][i][0] != arr[i - x][0] or image[y][i][1] != arr[i - x][1] or image[y][i][2] != arr[i - x][2]:
+                    res2 = False
+                    break
+
+
+            return res or res2
         except:
             return False
 
     def click_CONTINUE(self):
+        if (self.try_count > 7):
+            return
         print("DEBUG === CLICK CONTINUE")
         time.sleep(2)
         cmd = 'memuc adb -i {} "shell input tap 1170 678"'.format(self.threadID)
@@ -318,7 +448,7 @@ class memu_process_class (threading.Thread):
         print("DEBUG === CHECK ACCEPT")
         try:
             self.capture_image()
-            image = cv2.imread("D:/My_temporary/screen{}.png".format(self.threadID))
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res = True
             arr = [[ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3]]
 
@@ -336,6 +466,8 @@ class memu_process_class (threading.Thread):
             return False
 
     def click_ACCEPT(self):
+        if (self.try_count > 7):
+            return
         print("DEBUG === CLICK ACCEPT")
         time.sleep(2)
         cmd = 'memuc adb -i {} "shell input tap 1127 678"'.format(self.threadID)
@@ -343,83 +475,95 @@ class memu_process_class (threading.Thread):
         retval = p.wait()
 
     def auto_hit(self):
+        if (self.try_count_when_auto_hit > 30):
+            return
         print("DEBUG === AUTO HIT")
-        for i in range(0, 3):
-            cmd = 'memuc adb -i {} "shell input swipe 800 300 1000 300"'.format(self.threadID)
+        for i in range(0, 2):
+            cmd = 'memuc execcmd -i {} "input swipe 800 300 1000 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
 
-            cmd = 'memuc adb -i {} "shell input swipe 500 300 300 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input swipe 500 300 300 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
 
-            cmd = 'memuc adb -i {} "shell input swipe 800 300 1000 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input swipe 800 300 1000 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
 
-            # 8 hit
+            # 5 hit
 
-            cmd = 'memuc adb -i {} "shell input tap 800 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input tap 800 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
             
-            cmd = 'memuc adb -i {} "shell input tap 800 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input tap 900 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
             
-            cmd = 'memuc adb -i {} "shell input tap 800 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input tap 800 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
             
-            cmd = 'memuc adb -i {} "shell input tap 800 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input tap 900 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
             
-            cmd = 'memuc adb -i {} "shell input tap 800 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input tap 800 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
             
-            cmd = 'memuc adb -i {} "shell input tap 800 300"'.format(self.threadID)
-            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            retval = p.wait()
-            
-            cmd = 'memuc adb -i {} "shell input tap 800 300"'.format(self.threadID)
-            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            retval = p.wait()
-            
-            cmd = 'memuc adb -i {} "shell input tap 800 300"'.format(self.threadID)
-            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            retval = p.wait()
-
             ###
 
-            cmd = 'memuc adb -i {} "shell input swipe 500 300 300 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input swipe 500 300 300 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
 
-            cmd = 'memuc adb -i {} "shell input swipe 800 300 1000 300"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input swipe 800 300 1000 300"'.format(self.threadID)
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            retval = p.wait()
+
+            # 5 hit
+
+            cmd = 'memuc execcmd -i {} "input tap 800 300"'.format(self.threadID)
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            retval = p.wait()
+            
+            cmd = 'memuc execcmd -i {} "input tap 900 300"'.format(self.threadID)
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            retval = p.wait()
+            
+            cmd = 'memuc execcmd -i {} "input tap 800 300"'.format(self.threadID)
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            retval = p.wait()
+            
+            cmd = 'memuc execcmd -i {} "input tap 900 300"'.format(self.threadID)
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            retval = p.wait()
+            
+            cmd = 'memuc execcmd -i {} "input tap 800 300"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             retval = p.wait()
 
             ### Skill
 
-            cmd = 'memuc adb -i {} "shell input tap 200 650"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input tap 200 650"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            retval = p.wait()
+            # retval = p.wait()
 
-            cmd = 'memuc adb -i {} "shell input tap 200 650"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input tap 200 650"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            retval = p.wait()
+            # retval = p.wait()
 
-            cmd = 'memuc adb -i {} "shell input tap 200 650"'.format(self.threadID)
+            cmd = 'memuc execcmd -i {} "input tap 200 650"'.format(self.threadID)
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            retval = p.wait()
+            # retval = p.wait()
 
     def check_VIEW_MATCHUP(self):
         print("DEBUG === CHECK MATCHUP")
         try:
             self.capture_image()
-            image = cv2.imread("D:/My_temporary/screen{}.png".format(self.threadID))
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res1 = True
 
             arr = [[ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3]]
@@ -443,7 +587,7 @@ class memu_process_class (threading.Thread):
 
             for i in range(x, x1):
                 if image[y][i][0] != arr[i - x][0] or image[y][i][1] != arr[i - x][1] or image[y][i][2] != arr[i - x][2]:
-                    res1 = False
+                    res2 = False
                     break
             print(res1, res2)
             return res1 or res2
@@ -451,8 +595,10 @@ class memu_process_class (threading.Thread):
             return False
 
     def click_NEXT_FIGHT(self):
-        print("DEBUG === CHECK NEXT FIGHT")
-        time.sleep(2)
+        if (self.try_count_when_auto_hit > 30):
+            return
+        print("DEBUG === CLICK NEXT FIGHT")
+        # time.sleep(2)
 
         cmd = 'memuc adb -i {} "shell input tap 770 565"'.format(self.threadID)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -462,17 +608,112 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
-        time.sleep(2)
+        # time.sleep(2)
 
     def click_NEXT_SERIES(self):
+        if (self.try_count_when_auto_hit > 30):
+            return
         print("DEBUG === CLICK NEXT SERIES")
         cmd = 'memuc adb -i {} "shell input tap 948 680"'.format(self.threadID)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+    def check_FIGHT_BUTTON(self):
+        print("DEBUG === CHECK FIGHT BUTTON")
+        try:
+            self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+
+            arr = [[ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6]]
+
+            res = True
+
+            x = 328
+            x1 = 378
+            y = 147
+
+            for i in range(x, x1):
+                if image[y][i][0] != arr[i - x][0] or image[y][i][1] != arr[i - x][1] or image[y][i][2] != arr[i - x][2]:
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False
+
+    def check_PLAY_ARENA(self):
+        print("DEBUG === check_PLAY_ARENA")
+        try:
+            self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2]]
+
+            res = True
+
+            x = 558
+            x1 = 608
+            y = 596
+
+            for i in range(x, x1):
+                if image[y][i][0] != arr[i - x][0] or image[y][i][1] != arr[i - x][1] or image[y][i][2] != arr[i - x][2]:
+                    res = False
+                    break
+            
+            return res
+        except:
+            return False
+
+    def check_MULTIVERSE_ARENAS(self):
+        print("DEBUG === check_MULTIVERSE_ARENAS")
+        try:
+            self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+
+            arr = [[176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45]]
+
+            res = True
+
+            x = 422
+            x1 = 472
+            y = 123
+
+            for i in range(x, x1):
+                if image[y][i][0] != arr[i - x][0] or image[y][i][1] != arr[i - x][1] or image[y][i][2] != arr[i - x][2]:
+                    res = False
+                    break
+            
+            return res
+        except:
+            return False
+
+    def check_achived(self):
+        arr = [[  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0], [  0, 123,   0]]
+
+    def click_claim_achive(self):
+        if (self.try_count_when_auto_hit > 30):
+            return
+        print("DEBUG === click_claim_achive")
+        cmd = 'memuc execcmd -i {} "input tap 892 407"'.format(self.threadID, self.threadID)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        retval = p.wait()
+
+    def swipe_to_another_arena_mode(self):
+        if (self.try_count > 7):
+            return
+        # Swipe to make 3vs3
+        print("DEBUG === swipe_to_another_arena_mode")
+        cmd = 'memuc execcmd -i {} "input swipe 500 500 250 500"'.format(self.threadID, self.threadID)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        retval = p.wait()
+
+        print("DEBUG === swipe_to_another_arena_mode")
+        cmd = 'memuc execcmd -i {} "input swipe 500 500 250 500"'.format(self.threadID, self.threadID)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        retval = p.wait()
 
     def capture_image(self):
         print("DEBUG === CAPTURE IMAGE")
-        cmd = 'memuc adb -i {} "shell screencap -p /sdcard/Download/screen{}.png"'.format(self.threadID, self.threadID)
+        cmd = 'memuc execcmd -i {} "screencap -p /sdcard/Download/screen{}.png"'.format(self.threadID, self.threadID)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()

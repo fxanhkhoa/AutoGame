@@ -5,6 +5,7 @@ import numpy as np
 from signal import signal, SIGINT
 from sys import exit
 import time
+import json
 
 from ultility.memu_process import memu_process_class
 
@@ -26,9 +27,15 @@ if __name__ == '__main__':
     # Tell Python to run the handler() function when SIGINT is recieved
     signal(SIGINT, handler)
 
+    f = open("config.json", "r")
+    jsonStr = f.read()
+
+    config_obj = json.loads(jsonStr)
+    f.close()
+
     ### Connect
     wd = os.getcwd()
-    os.chdir("D:\\Program Files (x86)\\Micro virt\\MEmu")
+    os.chdir(config_obj["memu_folder"])
 
     print(os.getcwd())
 
@@ -36,7 +43,7 @@ if __name__ == '__main__':
     #### Process
     for i in range(0, NUM_OF_THREAD):
         print("creating {}".format(i))
-        memu_thr = memu_process_class(i)
+        memu_thr = memu_process_class(i, pic_folder = config_obj["picture_share_folder"])
         list_thread.append(memu_thr)
         list_thread[i].start()
 

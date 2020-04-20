@@ -1,15 +1,36 @@
+import subprocess
+import os
 import cv2
+import numpy as np
+from signal import signal, SIGINT
+from sys import exit
+import time
 
-image = cv2.imread("tennis-court.png")
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-blurred = cv2.GaussianBlur(gray, (3, 3), 0)
-# apply Canny edge detection using a wide threshold, tight
-# threshold, and automatically determined threshold
-wide = cv2.Canny(blurred, 10, 200)
-tight = cv2.Canny(blurred, 225, 250)
-# auto = auto_canny(blurred)
-# show the images
-cv2.imshow("Original", image)
-cv2.imshow("Edges", wide)
-cv2.imshow("tight", tight)
+wd = os.getcwd()
+os.chdir("D:\\Program Files (x86)\\Micro virt\\MEmu")
+
+print(os.getcwd())
+
+cmd = 'memuc execcmd -i {} "screencap -p"'.format(0)
+p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+image_bytes = bytearray(p.stdout.read().replace(b'\r\n', b'\n'))
+while image_bytes[0] != 0x89:
+    del image_bytes[0]
+nparr = np.frombuffer(image_bytes, np.uint8)
+image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+# print(image_bytes)
+
+f = open("D:\\My_Work\\AutoGame\\Python_memuc\\PIC_TEST.txt", "wb")
+f.write(image_bytes)
+f.close()
+
+p.wait()
+
+
+cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+
+# cv2.imshow('image', image)
 cv2.waitKey(0)
+cv2.destroyAllWindows()
