@@ -20,9 +20,9 @@ def click_and_crop(event, x, y, flags, param):
         arr = []
         arr2 = []
         print(image.shape)
-        for i in range(579, 679):
+        for i in range(787, 815):
             #print(image[584][i])
-            arr.append(image[230][i])
+            arr.append(image[292][i])
             # cv2.circle(image,(i, 300), 10, (255,0,255))
         print(arr)
         # print("==============")
@@ -75,7 +75,7 @@ def nothing(x):
 wd = os.getcwd()
 os.chdir("C:\\adb")
 
-p = subprocess.Popen('adb connect localhost:21503', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+p = subprocess.Popen('adb connect localhost:62001', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 for line in p.stdout.readlines():
     print (line)

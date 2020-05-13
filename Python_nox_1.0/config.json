@@ -1,0 +1,17 @@
+{
+    "memu_folder": "D:/Program Files/Nox/bin",
+    "picture_share_folder": "C:/Users/Admin/Nox_share/Download",
+    "NUM_OF_THREAD": 1,
+    "NUM_OF_MODE": 5,
+    "log_file":"D:/My_Work/AutoGame/Python_memuc/log.txt",
+    "nox_name":[
+        "127.0.0.1:62001",
+        "127.0.0.1:62025",
+        "127.0.0.1:62026",
+        "127.0.0.1:62027",
+        "127.0.0.1:62028",
+        "127.0.0.1:62029",
+        "127.0.0.1:62030",
+        "127.0.0.1:62031"
+    ]
+}

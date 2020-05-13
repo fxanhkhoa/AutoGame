@@ -1,0 +1,124 @@
+Sat Apr 25 12:37:35 2020: Start VM 0
+Sat Apr 25 12:40:10 2020: Start APP on VM 0
+Sat Apr 25 12:40:10 2020: Start APP on VM 1
+Sat Apr 25 12:44:12 2020: Start APP on VM 0
+Sat Apr 25 12:44:12 2020: Start APP on VM 1
+Sat Apr 25 13:00:23 2020: Start APP on VM 0
+Sat Apr 25 13:00:23 2020: Start APP on VM 1
+Sat Apr 25 14:13:36 2020: Start APP on VM 0
+Sat Apr 25 14:13:36 2020: Start APP on VM 1
+Sat Apr 25 14:44:33 2020: Now Refresh VM and APP 0
+Sat Apr 25 14:56:59 2020: Now Refresh VM and APP 1
+Sat Apr 25 15:53:00 2020: Now Refresh VM and APP 0
+Sat Apr 25 15:59:21 2020: Now Refresh VM and APP 1
+Sat Apr 25 20:16:52 2020: Start VM 0
+Sat Apr 25 20:16:52 2020: Start VM 1
+Sat Apr 25 20:17:17 2020: Start APP on VM 0
+Sat Apr 25 20:24:13 2020: Start VM 0
+Sat Apr 25 20:24:13 2020: Start VM 1
+Sat Apr 25 20:26:27 2020: Start APP on VM 1
+Sat Apr 25 20:26:39 2020: Start APP on VM 0
+Sat Apr 25 20:35:51 2020: Start APP on VM 0
+Sat Apr 25 20:37:10 2020: Start APP on VM 1
+Sat Apr 25 20:37:54 2020: Start APP on VM 1
+Sat Apr 25 20:38:03 2020: Start APP on VM 0
+Sat Apr 25 20:39:42 2020: Start APP on VM 0
+Sat Apr 25 20:39:43 2020: Start APP on VM 1
+Sat Apr 25 21:17:04 2020: Start APP on VM 0
+Sat Apr 25 21:17:08 2020: Start APP on VM 1
+Sat Apr 25 21:27:40 2020: Start APP on VM 0
+Sat Apr 25 21:27:40 2020: Start APP on VM 1
+Sat Apr 25 22:59:35 2020: Start APP on VM 1
+Sat Apr 25 22:59:44 2020: Start APP on VM 0
+Sat Apr 25 23:12:12 2020: Now Refresh VM and APP 0
+Sat Apr 25 23:25:04 2020: Now Refresh VM and APP 1
+Sun Apr 26 00:15:09 2020: Now Refresh VM and APP 0
+Sun Apr 26 00:17:35 2020: Now Refresh VM and APP 1
+Sun Apr 26 08:45:30 2020: Start VM 0
+Sun Apr 26 08:46:32 2020: Start VM 1
+Sun Apr 26 08:46:32 2020: Start VM 0
+Sun Apr 26 08:49:01 2020: Start APP on VM 1
+Sun Apr 26 08:49:04 2020: Start APP on VM 0
+Sun Apr 26 09:46:09 2020: Now Refresh VM and APP 0
+Sun Apr 26 09:47:10 2020: Now Refresh VM and APP 1
+Sun Apr 26 10:01:54 2020: Now Refresh VM and APP 1
+Sun Apr 26 10:06:36 2020: Start APP on VM 1
+Sun Apr 26 10:06:45 2020: Start APP on VM 0
+Sun Apr 26 10:07:55 2020: Start APP on VM 1
+Sun Apr 26 10:08:04 2020: Start APP on VM 0
+Sun Apr 26 10:10:32 2020: Start APP on VM 0
+Sun Apr 26 10:10:41 2020: Start APP on VM 1
+Sun Apr 26 10:35:57 2020: Start APP on VM 0
+Sun Apr 26 10:35:57 2020: Start APP on VM 1
+Sun Apr 26 10:41:02 2020: Start APP on VM 1
+Sun Apr 26 10:41:11 2020: Start APP on VM 0
+Sun Apr 26 10:42:00 2020: Start APP on VM 0
+Sun Apr 26 10:42:00 2020: Start APP on VM 1
+Sun Apr 26 10:42:43 2020: Start APP on VM 0
+Sun Apr 26 10:42:43 2020: Start APP on VM 1
+Sun Apr 26 13:52:08 2020: Start VM 0
+Sun Apr 26 13:53:26 2020: Start VM 0
+Sun Apr 26 13:53:26 2020: Start VM 1
+Sun Apr 26 13:55:43 2020: Start APP on VM 1
+Sun Apr 26 13:56:10 2020: Start APP on VM 0
+Sun Apr 26 14:55:23 2020: Now Refresh VM and APP 1
+Sun Apr 26 14:55:29 2020: Now Refresh VM and APP 0
+Sun Apr 26 15:17:10 2020: Now Refresh VM and APP 0
+Sun Apr 26 15:32:26 2020: Now Refresh VM and APP 1
+Sun Apr 26 17:57:16 2020: Start APP on VM 1
+Sun Apr 26 17:57:26 2020: Start VM 0
+Sun Apr 26 17:58:33 2020: Start APP on VM 0
+Sun Apr 26 18:52:13 2020: Start APP on VM 1
+Sun Apr 26 18:52:22 2020: Start APP on VM 0
+Sun Apr 26 21:25:53 2020: Start APP on VM 1
+Sun Apr 26 21:27:09 2020: Start APP on VM 1
+Sun Apr 26 21:29:35 2020: Start APP on VM 1
+Sun Apr 26 21:35:14 2020: Start APP on VM 1
+Sun Apr 26 21:40:42 2020: Start APP on VM 1
+Sun Apr 26 21:41:07 2020: Start APP on VM 0
+Sun Apr 26 21:52:48 2020: Start APP on VM 0
+Sun Apr 26 21:52:54 2020: Start APP on VM 1
+Sun Apr 26 22:38:46 2020: Start VM 1
+Sun Apr 26 22:38:57 2020: Start APP on VM 0
+Sun Apr 26 22:39:40 2020: Start APP on VM 1
+Sun Apr 26 22:40:11 2020: Start APP on VM 0
+Sun Apr 26 22:40:30 2020: Start VM 1
+Sun Apr 26 22:41:30 2020: Start APP on VM 1
+Sun Apr 26 23:40:01 2020: Now Refresh VM and APP 0
+Sun Apr 26 23:43:43 2020: Now Refresh VM and APP 1
+Mon Apr 27 09:46:42 2020: Start VM 1
+Mon Apr 27 09:47:43 2020: Start VM 1
+Mon Apr 27 09:47:43 2020: Start VM 0
+Mon Apr 27 09:48:41 2020: Start APP on VM 0
+Mon Apr 27 09:48:41 2020: Start APP on VM 1
+Mon Apr 27 09:48:50 2020: Now Refresh VM and APP 1
+Mon Apr 27 09:50:14 2020: Start APP on VM 0
+Mon Apr 27 09:50:27 2020: Start APP on VM 1
+Mon Apr 27 10:01:37 2020: Start APP on VM 0
+Mon Apr 27 10:01:48 2020: Start APP on VM 1
+Mon Apr 27 10:10:18 2020: Start APP on VM 0
+Mon Apr 27 10:10:47 2020: Start APP on VM 0
+Mon Apr 27 10:11:18 2020: Start APP on VM 1
+Mon Apr 27 10:12:06 2020: Start VM 0
+Mon Apr 27 10:12:07 2020: Start VM 1
+Mon Apr 27 10:13:26 2020: Start APP on VM 1
+Mon Apr 27 10:13:34 2020: Start APP on VM 0
+Mon Apr 27 10:15:20 2020: Start APP on VM 0
+Mon Apr 27 10:15:20 2020: Start APP on VM 1
+Mon Apr 27 10:21:15 2020: Start APP on VM 1
+Mon Apr 27 10:21:19 2020: Start APP on VM 0
+Mon Apr 27 10:23:27 2020: Start APP on VM 0
+Mon Apr 27 10:23:31 2020: Start APP on VM 1
+Mon Apr 27 10:24:38 2020: Start APP on VM 0
+Mon Apr 27 10:24:38 2020: Start APP on VM 1
+Mon Apr 27 12:40:07 2020: Start VM 1
+Mon Apr 27 12:40:45 2020: Start APP on VM 0
+Mon Apr 27 12:41:01 2020: Start APP on VM 1
+Mon Apr 27 12:49:36 2020: Now Refresh VM and APP 0
+Mon Apr 27 13:00:01 2020: Now Refresh VM and APP 0
+Mon Apr 27 13:10:22 2020: Now Refresh VM and APP 0
+Mon Apr 27 13:20:47 2020: Now Refresh VM and APP 0
+Mon Apr 27 15:02:15 2020: Start APP on VM 0
+Mon Apr 27 15:02:57 2020: Start APP on VM 1
+Mon Apr 27 16:02:35 2020: Now Refresh VM and APP 0
+Mon Apr 27 16:06:13 2020: Now Refresh VM and APP 1
