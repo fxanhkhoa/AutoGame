@@ -39,13 +39,14 @@ class memu_process_class (threading.Thread):
     def run(self):
 
         # Launch AR once
-        # vm_manage.open_AR(self.threadID)
-        # time.sleep(90)
-        # vm_manage.close_AR(self.threadID)
-        # time.sleep(40)
-        # vm_manage.start_app(self.threadID)
-        # while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS():
-        #     self.go_to_home()
+        vm_manage.open_AR(self.threadID)
+        time.sleep(60)
+        vm_manage.close_AR(self.threadID)
+        time.sleep(40)
+        vm_manage.start_app(self.threadID)
+        while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS():
+            self.capture_image()
+            self.go_to_home()
 
         while self.process_running:
             print(self.mode_arena)
@@ -59,11 +60,15 @@ class memu_process_class (threading.Thread):
             if self.mode_arena < 0:
                 self.mode_arena = self.num_of_mode
 
+            # Get one Image
+            self.capture_image()
+
             if not self.process_running:
                 return
             elif self.check_IN_FIGHTING() or self.check_NEXT_FIGHT():
                 self.try_count_when_auto_hit = 0
                 while not self.check_CONTINUE():
+                    self.capture_image()
                     self.click_NEXT_FIGHT()
                     # self.auto_hit()
                     self.try_count_when_auto_hit = self.try_count_when_auto_hit + 1
@@ -72,14 +77,6 @@ class memu_process_class (threading.Thread):
                         break
                 # if self.try_count_when_auto_hit < 15:
                 self.click_NEXT_SERIES()
-            elif self.check_RECONNECT():
-                self.start_time = time.time() + 3601
-            elif self.check_FIGHT_RECOVER():
-                self.click_FIGHT_RECOVER()
-            elif self.check_TODAY_REWARD():
-                self.click_X_TODAY_REWARD()
-            elif self.check_INCURSIONS():
-                self.click_X_INCURSION()
             elif self.check_FIGHT_BUTTON():
                 self.go_to_fight()
             elif self.check_PLAY_ARENA():
@@ -99,20 +96,22 @@ class memu_process_class (threading.Thread):
                 else:
                     self.click_continue_arena_3vs_3_3star()
                 self.try_count = self.try_count + 1
-                if (self.try_count > 2):
+                print("TRY:", self.try_count)
+                if (self.try_count >= 2):
                     self.go_to_home()
+                    time.sleep(3)
                     self.mode_arena = self.mode_arena - 1
                     self.try_count = 0
-                else:
-                    self.try_count = 0
-            elif self.check_WARNING():
-                self.execute_cmd_tap(250, 50)
-                time.sleep(2)
-                self.go_to_home()
-                self.mode_arena = self.mode_arena - 1
+            elif self.check_NEXT_FIGHT():
+                self.click_NEXT_FIGHT()
+            elif self.check_CONTINUE():
+                self.click_CONTINUE()
+            elif self.check_ACCEPT():
+                self.click_ACCEPT()
             elif self.check_in_PICKING_PHASE():
                 while self.check_GET_HELP_and_CLICK():
-                    pass
+                    self.capture_image()
+                self.capture_image()
                 if self.check_GET_MORE():
                     self.flag_exist_GET_MORE = True
                 elif not self.check_GET_MORE():
@@ -121,7 +120,7 @@ class memu_process_class (threading.Thread):
                     self.click_find_match()
                 elif self.check_NO_MORE_HEROS() and not self.check_FIND_MATCH():
                     self.mode_arena = self.mode_arena - 1
-                    self.go_to_home() 
+                    self.go_to_home()
                 elif not self.check_FIND_MATCH():
                     self.pick_hero()
                     self.try_count = self.try_count + 1
@@ -133,14 +132,23 @@ class memu_process_class (threading.Thread):
                     time.sleep(1)
                 elif self.check_FIND_MATCH():
                     self.click_find_match()
-            elif self.check_NEXT_FIGHT():
-                self.click_NEXT_FIGHT()
-            elif self.check_CONTINUE():
-                self.click_CONTINUE()
-            elif self.check_ACCEPT():
-                self.click_ACCEPT()
-            else:
+            elif self.check_PICK_HERO_FAIL():
+                self.execute_cmd_tap(329, 120)
+            elif self.check_WARNING():
+                self.execute_cmd_tap(250, 50)
+                time.sleep(2)
                 self.go_to_home()
+                self.mode_arena = self.mode_arena - 1
+            elif self.check_RECONNECT():
+                self.start_time = time.time() + 3601
+            elif self.check_FIGHT_RECOVER():
+                self.click_FIGHT_RECOVER()
+            elif self.check_TODAY_REWARD():
+                self.click_X_TODAY_REWARD()
+            elif self.check_INCURSIONS():
+                self.click_X_INCURSION()
+            else:
+                pass
                 
             
 
@@ -195,7 +203,7 @@ class memu_process_class (threading.Thread):
     def check_GET_MORE(self):
         print("DEBUG === check_GET_MORE")
         try:
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res = True
             
@@ -218,7 +226,7 @@ class memu_process_class (threading.Thread):
     def check_GET_HELP_and_CLICK(self):
         print("DEBUG === CHECK GET HELP {}".format(self.threadID))
         try:
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             # arr = [[ 6, 99,  4], [  6, 100,   5], [  6, 101,   6], [  6, 102,   8], [  6, 103,  11], [  6, 105,  14], [  6, 106,  17], [  6, 108,  20], [  6, 111,  22], [  6, 112,  25]]
@@ -329,7 +337,7 @@ class memu_process_class (threading.Thread):
     def check_FIND_MATCH(self):
         print("DEBUG === check_FIND_MATCH")
         try:
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res = True
             
@@ -357,10 +365,12 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+        time.sleep(1)
+
     def check_CONTINUE(self):
         print("DEBUG === CHECK CONTINUE")
         try:
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res = True
 
@@ -400,6 +410,8 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+        time.sleep(1)
+
     
     def click_CONTINUE_without_try(self):
         print("DEBUG === CLICK CONTINUE")
@@ -407,10 +419,12 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+        time.sleep(1)
+
     def check_ACCEPT(self):
         print("DEBUG === CHECK ACCEPT")
         try:
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res = True
             arr = [[ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3]]
@@ -436,6 +450,8 @@ class memu_process_class (threading.Thread):
         cmd = 'nox_adb.exe -s {} shell input tap 1127 678'.format(self.device_name)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
+
+        time.sleep(1)
 
     def auto_hit(self):
         if (self.try_count_when_auto_hit > 17):
@@ -482,7 +498,7 @@ class memu_process_class (threading.Thread):
     def check_VIEW_MATCHUP(self):
         print("DEBUG === CHECK MATCHUP")
         try:
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res1 = True
 
@@ -526,7 +542,7 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
-        # time.sleep(2)
+        time.sleep(1)
 
     def click_NEXT_SERIES(self):
         print("DEBUG === CLICK NEXT SERIES")
@@ -534,10 +550,12 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+        time.sleep(1)
+
     def check_FIGHT_BUTTON(self):
         try:
             print("DEBUG === check_FIGHT_BUTTON")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
 
             arr = [[ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6], [ 4, 79,  6]]
@@ -560,7 +578,7 @@ class memu_process_class (threading.Thread):
     def check_PLAY_ARENA(self):
         print("DEBUG === check_PLAY_ARENA")
         try:
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             arr = [[ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2]]
@@ -583,7 +601,7 @@ class memu_process_class (threading.Thread):
     def check_MULTIVERSE_ARENAS(self):
         print("DEBUG === check_MULTIVERSE_ARENAS")
         try:
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
 
             arr = [[208, 177, 132], [219, 195, 160], [185, 138,  71], [190, 146,  85], [220, 197, 163], [208, 177, 132], [181, 131,  61], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [215, 188, 150], [228, 211, 186], [182, 132,  62], [182, 133,  64], [220, 197, 164], [215, 189, 151], [178, 127,  52], [175, 122,  45], [188, 143,  80], [218, 193, 158], [208, 177, 132], [181, 131,  61], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [181, 130,  60], [213, 186, 146], [217, 192, 157], [182, 133,  64], [175, 122,  45], [188, 143,  80], [218, 193, 158], [211, 182, 140], [182, 134,  65], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [195, 155,  99], [224, 203, 174], [200, 163, 111], [177, 126,  51], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [176, 123,  47], [195, 154,  98], [226, 208, 181], [198, 159, 105], [175, 122,  45], [175, 122,  45], [175, 122,  45], [198, 159, 105], [225, 206, 178], [198, 160, 107], [177, 125,  49], [175, 122,  45], [175, 122,  45], [175, 122,  45], [192, 150,  90], [230, 213, 190], [203, 167, 118], [175, 122,  45], [175, 122,  45], [196, 156, 101], [223, 202, 172], [195, 155,  99], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [205, 172, 125], [224, 203, 174], [187, 141,  77], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [175, 122,  45], [185, 138,  71], [221, 199, 167], [215, 188, 149]]
@@ -614,6 +632,8 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+        time.sleep(1)
+
     def swipe_to_another_arena_mode(self):
         if (self.try_count > 7):
             return
@@ -631,7 +651,7 @@ class memu_process_class (threading.Thread):
     def check_in_PICKING_PHASE(self):
         try:
             print("DEBUG === check_in_PICKING_PHASE")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             arr = [[47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49]]
@@ -654,7 +674,7 @@ class memu_process_class (threading.Thread):
     def check_REQUIREMENT(self):
         try:
             print("DEBUG === check_REQUIREMENT")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             arr = [[ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3], [ 1, 74,  3]]
@@ -675,7 +695,7 @@ class memu_process_class (threading.Thread):
 
     def check_APP_FREZZE(self):
         try:
-            self.capture_image()
+            # self.capture_image()
             pic_1 = cv2.imread(self.pic_folder + "/screen_for_frezze{}.png".format(self.threadID))
             pic_2 = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
 
@@ -691,7 +711,7 @@ class memu_process_class (threading.Thread):
     def check_FIGHT_RECOVER(self):
         try:
             print("DEBUG === check_FIGHT_RECOVER")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
 
             arr = [[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [254, 254, 254], [215, 215, 216], [47, 47, 49], [47, 47, 49], [109, 109, 111], [233, 233, 233], [255, 255, 255], [255, 255, 255], [227, 227, 227], [96, 96, 98], [47, 47, 49], [71, 71, 72], [237, 237, 237], [255, 255, 255], [255, 255, 255], [250, 250, 250], [177, 177, 178], [47, 47, 49], [47, 47, 49], [66, 66, 68], [167, 167, 168], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [249, 249, 249], [70, 70, 72], [47, 47, 49], [47, 47, 49], [ 99,  99, 101], [233, 233, 233], [255, 255, 255], [255, 255, 255], [255, 255, 255]]
@@ -714,7 +734,7 @@ class memu_process_class (threading.Thread):
     def check_WARNING(self):
         try:
             print("DEBUG === check_WARNING")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
 
             arr = [[255, 255, 255], [228, 228, 228], [88, 88, 90], [47, 47, 49], [122, 122, 123], [251, 251, 251], [255, 255, 255], [246, 246, 246], [143, 143, 144], [47, 47, 49], [69, 69, 71], [170, 170, 171], [255, 255, 255], [255, 255, 255], [234, 234, 234], [111, 111, 112], [48, 48, 50], [ 98,  98, 100], [231, 231, 232], [255, 255, 255], [255, 255, 255], [219, 219, 219], [53, 53, 55], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [96, 96, 98], [208, 208, 208], [255, 255, 255], [255, 255, 255], [210, 210, 210], [81, 81, 83], [47, 47, 49], [47, 47, 49], [47, 47, 49], [70, 70, 72], [234, 234, 234], [255, 255, 255], [255, 255, 255], [225, 225, 226], [117, 117, 118], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [168, 168, 169], [247, 247, 247], [255, 255, 255], [255, 255, 255]]
@@ -737,7 +757,7 @@ class memu_process_class (threading.Thread):
     def check_TODAY_REWARD(self):
         try:
             print("DEBUG === check_TODAY_REWARD")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             arr = [[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [242, 242, 242], [176, 176, 176], [82, 82, 83], [47, 47, 49], [81, 81, 82], [218, 218, 218], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [204, 204, 204], [85, 85, 87], [47, 47, 49], [47, 47, 49], [77, 77, 79], [243, 243, 243], [255, 255, 255], [248, 248, 248], [159, 159, 160], [47, 47, 49], [90, 90, 92], [215, 215, 215], [255, 255, 255], [227, 227, 227], [113, 113, 114], [48, 48, 50], [169, 169, 170], [247, 247, 247], [255, 255, 255], [213, 213, 213], [54, 54, 56], [51, 51, 53]]
 
@@ -759,7 +779,7 @@ class memu_process_class (threading.Thread):
     def check_INCURSIONS(self):
         try:
             print("DEBUG === check_INCURSIONS")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             arr = [[187, 186, 184], [67, 63, 58], [33, 28, 22], [123, 120, 117], [243, 243, 243], [255, 255, 255], [252, 252, 252], [168, 166, 164], [32, 27, 21], [74, 70, 65], [224, 223, 222], [255, 255, 255], [255, 255, 255], [205, 204, 202], [85, 81, 77], [32, 27, 21], [55, 51, 46], [211, 210, 208], [255, 255, 255], [255, 255, 255], [255, 255, 255], [175, 173, 171], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [232, 232, 231], [255, 255, 255], [255, 255, 255], [227, 226, 225], [103, 100,  95], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [32, 27, 21], [55, 51, 45], [235, 235, 234]]
 
@@ -781,7 +801,7 @@ class memu_process_class (threading.Thread):
     def check_IN_FIGHTING(self):
         try:
             print("DEBUG === check_IN_FIGHTING")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             arr = [[ 5, 76,  7], [ 5, 79,  7], [ 6, 80,  7], [ 6, 81,  8], [ 5, 81,  7], [ 6, 82,  7], [ 5, 82,  7], [ 5, 82,  7], [134, 168, 134], [155, 185, 156], [155, 185, 156], [155, 185, 156], [155, 185, 156], [155, 185, 156], [ 5, 82,  7], [ 5, 82,  7], [ 5, 82,  7], [ 5, 81,  7], [ 5, 81,  7], [ 6, 82,  7], [155, 186, 156], [155, 185, 156], [155, 186, 156], [155, 186, 156], [155, 185, 156], [144, 178, 145], [ 6, 81,  7], [ 6, 81,  7], [ 6, 81,  7], [ 5, 81,  7], [ 5, 81,  8], [ 5, 81,  7], [ 6, 79,  7]]
@@ -805,7 +825,7 @@ class memu_process_class (threading.Thread):
     def check_NO_MORE_HEROS(self):
         try:
             print("DEBUG === check_NO_MORE_HEROS")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             arr = [[ 37,  43, 155], [149, 151, 197], [242, 241, 233], [172, 173, 205], [ 44,  51, 158], [ 22,  30, 153], [ 27,  35, 156], [ 27,  35, 156], [ 27,  35, 156], [ 27,  35, 156], [ 27,  35, 156], [ 27,  34, 155], [ 24,  32, 154], [ 58,  65, 164], [172, 174, 207], [235, 235, 230], [231, 230, 229], [228, 228, 228], [228, 228, 228], [230, 230, 229], [223, 223, 226], [148, 151, 197], [ 32,  38, 152], [ 82,  87, 172], [216, 216, 223], [216, 216, 223], [104, 109, 181], [ 18,  25, 150]]
@@ -829,7 +849,7 @@ class memu_process_class (threading.Thread):
     def check_IN_CRYSTAL(self):
         try:
             print("DEBUG === check_IN_CRYSTAL")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             arr = [[248, 242, 235], [209, 178, 133], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 123,  46], [177, 124,  47], [176, 123,  46], [176, 122,  45], [224, 203, 173], [238, 226, 210], [190, 146,  83], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [183, 134,  64], [248, 243, 236], [236, 224, 206], [176, 122,  45], [176, 122,  45], [176, 122,  45], [186, 139,  72], [230, 212, 187], [241, 232, 219], [201, 164, 112], [184, 136,  67], [225, 204, 175], [245, 239, 229], [200, 163, 109], [178, 125,  49], [176, 122,  45], [180, 129,  57], [250, 247, 242], [240, 229, 215], [182, 132,  61], [178, 125,  49], [176, 123,  46], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45], [176, 122,  45]]
@@ -853,7 +873,7 @@ class memu_process_class (threading.Thread):
     def check_NEXT_FIGHT(self):
         try:
             print("DEBUG === check_NEXT_FIGHT")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             arr = [[ 7, 85,  9], [ 9, 86, 11], [ 67, 126,  69], [232, 239, 232], [254, 254, 254], [183, 206, 184], [ 50, 114,  51], [ 7, 85,  9], [ 81, 136,  82], [215, 228, 215], [255, 255, 255], [204, 220, 205], [25, 98, 27], [ 89, 141,  90], [255, 255, 255], [255, 255, 255], [248, 250, 248], [215, 228, 215], [211, 225, 212], [210, 224, 211], [209, 224, 210], [208, 223, 209], [208, 223, 209], [207, 222, 208], [152, 184, 153], [ 35, 104,  37], [ 7, 85,  9], [22, 95, 23], [232, 239, 232], [255, 255, 255], [228, 236, 228], [ 28, 100,  30], [22, 95, 23], [124, 165, 125], [255, 255, 255], [203, 220, 204], [ 81, 136,  82], [149, 182, 150], [251, 252, 251], [232, 239, 232], [ 62, 123,  64], [ 8, 86, 10], [ 86, 139,  87], [249, 251, 249], [252, 253, 252], [148, 182, 149], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9]]
@@ -877,7 +897,7 @@ class memu_process_class (threading.Thread):
     def check_RECONNECT(self):
         try:
             print("DEBUG === check_RECONNECT")
-            self.capture_image()
+            # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
             arr = [[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [240, 245, 240], [199, 217, 200], [ 85, 138,  86], [14, 89, 16], [ 90, 142,  91], [249, 251, 249], [255, 255, 255], [253, 254, 253], [238, 244, 239], [237, 243, 238], [237, 243, 238], [237, 243, 238], [237, 243, 238], [237, 243, 238], [237, 243, 238], [181, 204, 181], [ 49, 114,  51], [ 80, 135,  82], [230, 238, 230], [255, 255, 255], [249, 251, 249], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [ 64, 124,  65], [200, 217, 201], [255, 255, 255], [245, 248, 245], [ 46, 111,  48], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [ 6, 84,  8], [18, 92, 20], [115, 159, 116], [255, 255, 255], [255, 255, 255], [148, 181, 148]]
@@ -898,6 +918,30 @@ class memu_process_class (threading.Thread):
         except:
             return False
 
+    def check_PICK_HERO_FAIL(self):
+        try:
+            print("DEBUG === check_PICK_HERO_FAIL")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[ 6, 83,  7], [ 6, 83,  7], [123, 164, 124], [255, 255, 255], [247, 250, 247], [156, 187, 157], [ 6, 83,  7], [ 47, 111,  48], [181, 204, 181], [255, 255, 255], [199, 217, 200], [ 64, 123,  64], [ 7, 84,  8], [102, 149, 102], [232, 239, 232], [251, 252, 251], [114, 158, 115], [168, 195, 168], [255, 255, 255], [234, 241, 235], [ 84, 137,  85], [ 6, 83,  7], [ 55, 117,  56], [194, 213, 195], [255, 255, 255], [213, 226, 213], [135, 172, 135], [108, 153, 108], [108, 153, 108], [108, 153, 108], [108, 153, 108], [108, 153, 108], [108, 153, 108], [103, 150, 103], [ 40, 107,  41], [121, 163, 122], [255, 255, 255], [254, 254, 254], [160, 190, 161], [14, 88, 15], [ 6, 83,  7], [ 6, 83,  7], [ 6, 83,  7], [ 6, 83,  7], [ 6, 83,  7], [ 69, 127,  70], [243, 247, 243], [255, 255, 255], [238, 244, 238], [21, 93, 22]]
+
+            res = True
+
+            x = 615
+            x1 = 665
+            y = 443
+
+            for i in range(x, x1):
+                # print(image[y][i], arr[i - x])
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            
+            return res
+        except:
+            return False
+
     def click_FIGHT_RECOVER(self):
         if (self.try_count > 7):
             return
@@ -906,11 +950,15 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+        time.sleep(1)
+
     def click_X_TODAY_REWARD(self):
         print("DEBUG === click_X")
         cmd = 'nox_adb.exe -s {} shell input tap 954 84'.format(self.device_name)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
+
+        time.sleep(1)
     
     def click_X_INCURSION(self):
         print("DEBUG === click_X")
@@ -918,11 +966,15 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+        time.sleep(1)
+
     def click_continue_arena_on_right(self):
         print("DEBUG === click_continue_arena_on_right")
         cmd = 'nox_adb.exe -s {} shell input tap 854 450'.format(self.device_name)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
+
+        time.sleep(1)
 
     def capture_image_for_FREEZE(self):
         print("DEBUG === CAPTURE IMAGE")
@@ -942,10 +994,14 @@ class memu_process_class (threading.Thread):
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
+        time.sleep(1)
+
     def execute_cmd_swipe(self, x, y, z, t):
         cmd = 'nox_adb.exe -s {} shell input swipe {} {} {} {}'.format(self.device_name, x, y, z, t)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
+
+        time.sleep(1)
 
     def execute_cmd_tap_no_wait(self, x, y):
         cmd = 'nox_adb.exe -s {} shell input tap {} {}'.format(self.device_name, x, y)
