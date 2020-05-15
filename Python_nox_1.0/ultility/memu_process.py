@@ -39,14 +39,14 @@ class memu_process_class (threading.Thread):
     def run(self):
 
         # Launch AR once
-        vm_manage.open_AR(self.threadID)
-        time.sleep(60)
-        vm_manage.close_AR(self.threadID)
-        time.sleep(40)
-        vm_manage.start_app(self.threadID)
-        while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS():
-            self.capture_image()
-            self.go_to_home()
+        # vm_manage.open_AR(self.threadID)
+        # time.sleep(60)
+        # vm_manage.close_AR(self.threadID)
+        # time.sleep(40)
+        # vm_manage.start_app(self.threadID)
+        # while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS():
+        #     self.capture_image()
+        #     self.go_to_home()
 
         while self.process_running:
             print(self.mode_arena)
@@ -112,7 +112,9 @@ class memu_process_class (threading.Thread):
                 while self.check_GET_HELP_and_CLICK():
                     self.capture_image()
                 self.capture_image()
-                if self.check_GET_MORE():
+                if self.check_FIND_MATCH():
+                    self.click_find_match()
+                elif self.check_GET_MORE():
                     self.flag_exist_GET_MORE = True
                 elif not self.check_GET_MORE():
                     self.flag_exist_GET_MORE = False
@@ -123,6 +125,14 @@ class memu_process_class (threading.Thread):
                     self.go_to_home()
                 elif not self.check_FIND_MATCH():
                     self.pick_hero()
+                    time.sleep(1.5)
+                    self.click_find_match()
+                    time.sleep(2)
+                    self.click_CONTINUE()
+                    time.sleep(2.5)
+                    self.click_ACCEPT()
+                    time.sleep(2.5)
+                    self.click_CONTINUE()
                     self.try_count = self.try_count + 1
                     if self.try_count > 5:
                         self.mode_arena = self.mode_arena - 1
@@ -130,8 +140,7 @@ class memu_process_class (threading.Thread):
                         self.go_to_home()
                         self.try_count = 0
                     time.sleep(1)
-                elif self.check_FIND_MATCH():
-                    self.click_find_match()
+                
             elif self.check_PICK_HERO_FAIL():
                 self.execute_cmd_tap(329, 120)
             elif self.check_WARNING():
@@ -147,6 +156,10 @@ class memu_process_class (threading.Thread):
                 self.click_X_TODAY_REWARD()
             elif self.check_INCURSIONS():
                 self.click_X_INCURSION()
+            elif self.check_X_EXIST():
+                self.execute_cmd_tap(831, 103)
+            elif self.check_X_CHAT_EXIST():
+                self.execute_cmd_tap(1248, 34)
             else:
                 pass
                 
@@ -654,13 +667,13 @@ class memu_process_class (threading.Thread):
             # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
-            arr = [[47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49]]
+            arr = [[  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [ 73, 148,  94], [249, 251, 250], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [199, 222, 206], [ 57, 139,  80], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  1, 106,  31], [ 49, 134,  73], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [251, 253, 251], [ 63, 142,  86], [  1, 106,  31], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [  0, 105,  30], [ 7, 82, 29], [56, 32, 50], [95, 47, 84], [124,  62, 109], [144,  72, 127], [155,  78, 135], [162,  80, 137], [159,  79, 135], [149,  74, 126], [135,  67, 113], [115,  58,  98]]
 
             res = True
 
-            x = 24
-            x1 = 124
-            y = 535
+            x = 1218
+            x1 = 1268
+            y = 113
 
             for i in range(x, x1):
                 if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
@@ -931,6 +944,54 @@ class memu_process_class (threading.Thread):
             x = 615
             x1 = 665
             y = 443
+
+            for i in range(x, x1):
+                # print(image[y][i], arr[i - x])
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            
+            return res
+        except:
+            return False
+
+    def check_X_EXIST(self):
+        try:
+            print("DEBUG === check_X_EXIST")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [49, 49, 51], [70, 70, 72], [112, 112, 114], [112, 112, 114], [112, 112, 114], [112, 112, 114], [112, 112, 114], [112, 112, 114], [112, 112, 114], [112, 112, 114], [112, 112, 114], [108, 108, 110], [60, 60, 62], [48, 48, 50], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [50, 50, 52], [93, 93, 94], [110, 110, 111], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [47, 47, 49], [48, 48, 49], [48, 48, 49]]
+
+            res = True
+
+            x = 813
+            x1 = 863
+            y = 102
+
+            for i in range(x, x1):
+                # print(image[y][i], arr[i - x])
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            
+            return res
+        except:
+            return False
+
+    def check_X_CHAT_EXIST(self):
+        try:
+            print("DEBUG === check_X_CHAT_EXIST")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[ 99,  99, 100], [56, 56, 57], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [62, 62, 63], [106, 106, 107], [114, 114, 114], [114, 114, 114], [114, 114, 114], [114, 114, 114], [114, 114, 114], [114, 114, 114], [114, 114, 114], [114, 114, 114], [113, 113, 114], [76, 76, 77], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [80, 80, 81], [113, 113, 114], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50], [49, 49, 50]]
+
+            res = True
+
+            x = 1229
+            x1 = 1279
+            y = 32
 
             for i in range(x, x1):
                 # print(image[y][i], arr[i - x])
