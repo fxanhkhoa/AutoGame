@@ -48,6 +48,40 @@ class memu_process_class (threading.Thread):
         #     self.capture_image()
         #     self.go_to_home()
 
+        # Claim all reward
+        self.execute_cmd_tap(250, 50)
+        time.sleep(2)
+        print("DEBUG === Click Inventory")
+        self.execute_cmd_tap(912, 133)
+        time.sleep(2)
+        print("DEBUG === Click Items")
+        self.execute_cmd_tap(801, 367)
+        time.sleep(2)
+        print("DEBUG === Click Box")
+        self.execute_cmd_tap(1217, 111)
+        time.sleep(2)
+        print("DEBUG === Click Rewards")
+        self.execute_cmd_tap(247, 110)
+        time.sleep(2)
+        while self.check_CLAIM_REWARD_LEFT():
+            self.execute_cmd_tap(972, 308)
+        time.sleep(1)
+        self.go_to_home()
+
+        # Alliance
+        self.execute_cmd_tap(250, 50)
+        time.sleep(2)
+        print("DEBUG === Click Alliance")
+        self.execute_cmd_tap(490, 135)
+        time.sleep(4)
+        print("DEBUG === Click Help")
+        self.execute_cmd_tap(713, 189)
+        time.sleep(2)
+        while self.check_HELP():
+            self.execute_cmd_tap(1032, 264)
+        time.sleep(1)
+        self.go_to_home()
+
         while self.process_running:
             print(self.mode_arena)
             if time.time() - self.start_time > 3600:
@@ -98,8 +132,8 @@ class memu_process_class (threading.Thread):
                 self.try_count = self.try_count + 1
                 print("TRY:", self.try_count)
                 if (self.try_count >= 2):
-                    self.go_to_home()
-                    time.sleep(3)
+                    self.execute_cmd_tap(80, 36)
+                    time.sleep(1.5)
                     self.mode_arena = self.mode_arena - 1
                     self.try_count = 0
             elif self.check_NEXT_FIGHT():
@@ -127,6 +161,12 @@ class memu_process_class (threading.Thread):
                     self.pick_hero()
                     time.sleep(1.5)
                     self.click_find_match()
+                    time.sleep(2)
+                    self.click_CONTINUE()
+                    time.sleep(2.5)
+                    self.click_ACCEPT()
+                    time.sleep(2.5)
+                    self.click_CONTINUE()
                     time.sleep(2)
                     self.click_CONTINUE()
                     time.sleep(2.5)
@@ -992,6 +1032,54 @@ class memu_process_class (threading.Thread):
             x = 1229
             x1 = 1279
             y = 32
+
+            for i in range(x, x1):
+                # print(image[y][i], arr[i - x])
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            
+            return res
+        except:
+            return False
+
+    def check_CLAIM_REWARD_LEFT(self):
+        try:
+            print("DEBUG === check_X_CHAT_EXIST")
+            self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[253, 254, 253], [173, 203, 174], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [108, 161, 109], [250, 252, 250], [108, 161, 109], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [151, 189, 152], [241, 246, 241], [ 44, 120,  46], [ 1, 93,  3], [ 0, 92,  2], [ 13, 100,  15], [150, 188, 151], [214, 229, 214], [ 56, 128,  58], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 46, 121,  48], [200, 220, 200], [164, 197, 165], [ 23, 107,  25], [ 0, 92,  2], [ 0, 92,  2], [125, 172, 126], [236, 243, 236], [ 60, 130,  62], [11, 99, 13], [110, 162, 111]]
+
+            res = True
+
+            x = 940
+            x1 = 990
+            y = 310
+
+            for i in range(x, x1):
+                # print(image[y][i], arr[i - x])
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            
+            return res
+        except:
+            return False
+
+    def check_HELP(self):
+        try:
+            print("DEBUG === check_HELP")
+            self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[ 0, 92,  2], [ 0, 92,  2], [165, 197, 166], [206, 224, 206], [105, 159, 106], [ 75, 140,  76], [ 75, 140,  76], [ 75, 140,  76], [ 75, 140,  76], [ 75, 140,  76], [ 75, 140,  76], [ 75, 140,  76], [134, 178, 135], [247, 250, 247], [111, 163, 112], [ 0, 92,  2], [ 88, 148,  89], [232, 240, 232], [139, 181, 140], [ 65, 134,  66], [ 65, 134,  66], [ 65, 134,  66], [ 65, 134,  66], [ 65, 134,  66], [ 65, 134,  66], [ 54, 127,  56], [ 3, 94,  5], [ 0, 92,  2], [129, 174, 130], [236, 243, 236], [ 90, 150,  91], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 99, 155, 100]]
+
+            res = True
+
+            x = 986
+            x1 = 1026
+            y = 432
 
             for i in range(x, x1):
                 # print(image[y][i], arr[i - x])
