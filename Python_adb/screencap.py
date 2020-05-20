@@ -20,9 +20,9 @@ def click_and_crop(event, x, y, flags, param):
         arr = []
         arr2 = []
         print(image.shape)
-        for i in range(986, 1026):
+        for i in range(582, 642):
             #print(image[584][i])
-            arr.append(image[432][i])
+            arr.append(image[111][i])
             # cv2.circle(image,(i, 300), 10, (255,0,255))
         print(arr)
         # print("==============")
@@ -77,8 +77,8 @@ os.chdir("C:\\adb")
 
 p = subprocess.Popen('adb connect localhost:62001', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-for line in p.stdout.readlines():
-    print (line)
+# for line in p.stdout.readlines():
+#     print (line)
 
 retval = p.wait()
 
@@ -86,18 +86,20 @@ p = subprocess.Popen("adb exec-out screencap -p", shell=True, stdout=subprocess.
 # print(p.stdout.read())
 image_bytes = p.stdout.read().replace(b'\r\n', b'\n')
 
-# print(image_bytes)
-# f = open('screenCap.png', 'wb')
-# f.write(image_bytes)
-# f.close()
+# # print(image_bytes)
+# # f = open('screenCap.png', 'wb')
+# # f.write(image_bytes)
+# # f.close()
 nparr = np.frombuffer(image_bytes, np.uint8)
 image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+# print(os.path.exists('screen.png'))
+# image = cv2.imread('screen.png')
 
 retval = p.wait()
 
 print(nparr.shape, image.shape)
 cv2.imwrite("screenCap.png", image)
-# cv2.resize(image, (640, 360), interpolation = cv2.INTER_AREA)
+cv2.resize(image, (640, 360), interpolation = cv2.INTER_AREA)
 
 # For Get Mouse Coordinate
 cv2.namedWindow("image", cv2.WINDOW_NORMAL)

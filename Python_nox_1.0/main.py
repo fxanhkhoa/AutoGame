@@ -49,7 +49,7 @@ if __name__ == '__main__':
     #### Process
     for i in range(0, config_obj['NUM_OF_THREAD']):
         print("creating {}".format(i))
-        memu_thr = memu_process_class(i, pic_folder = config_obj["picture_share_folder"], log_file = config_obj["log_file"], num_of_mode = config_obj["NUM_OF_MODE"], device_name = config_obj["nox_name"][i])
+        memu_thr = memu_process_class(i, pic_folder = config_obj["picture_share_folder"], log_file = config_obj["log_file"], num_of_mode = config_obj["NUM_OF_MODE"], device_name = config_obj["nox_name"][i], account_name = config_obj["account_username"][i], account_password = config_obj["account_password"][i])
         list_thread.append(memu_thr)
         list_thread[i].start()
 
