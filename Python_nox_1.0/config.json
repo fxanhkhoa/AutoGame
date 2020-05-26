@@ -2,7 +2,13 @@
     "memu_folder": "D:/Program Files/Nox/bin",
     "picture_share_folder": "C:/Users/Admin/Nox_share/Download",
     "NUM_OF_THREAD": 1,
-    "NUM_OF_MODE": 5,
+    "THREAD_INDEX": 0,
+    "NUM_OF_MODE": [
+        [3, 2, 1, 3],
+        [3, 2, 1, 0],
+        [3, 2, 1, 0],
+        [3, 2, 1, 0]
+    ],
     "log_file":"D:/My_Work/AutoGame/Python_memuc/log.txt",
     "nox_name":[
         "127.0.0.1:62001",
@@ -25,5 +31,11 @@
         "03021996",
         "03021996",
         "03021996"
-    ]
+    ],
+    "time_to_reset_nox": 3600,
+    "claim_reward": 1,
+    "claim_help": 1,
+    "time_get_reward_and_help": "11:00",
+    "time_check_freeze": 600,
+    "time_to_wait_then_reconnect": 600
 }

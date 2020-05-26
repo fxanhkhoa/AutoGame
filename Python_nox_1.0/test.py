@@ -35,4 +35,9 @@ import time
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
 
-print(os.path.getmtime('C:/Users/Admin/Nox_share/Download/screen0.png'))
+# print(os.path.getmtime('C:/Users/Admin/Nox_share/Download/screen0.png'))
+
+
+from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
+device = MonkeyRunner.waitForConnection()
+device.touch(183, 23, MonkeyRunner.DOWN_AND_UP)

@@ -27,6 +27,9 @@
   ('pyiboot01_bootstrap',
    'c:\\users\\admin\\appdata\\local\\programs\\python\\python37\\lib\\site-packages\\PyInstaller\\loader\\pyiboot01_bootstrap.py',
    'PYSOURCE'),
+  ('pyi_rth__tkinter',
+   'c:\\users\\admin\\appdata\\local\\programs\\python\\python37\\lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth__tkinter.py',
+   'PYSOURCE'),
   ('pyi_rth_pkgres',
    'c:\\users\\admin\\appdata\\local\\programs\\python\\python37\\lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgres.py',
    'PYSOURCE'),
@@ -43,7 +46,7 @@
  [],
  False,
  False,
- 1589960516,
+ 1590491974,
  [('run.exe',
    'c:\\users\\admin\\appdata\\local\\programs\\python\\python37\\lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit\\run.exe',
    'EXECUTABLE')])

@@ -20,9 +20,9 @@ def click_and_crop(event, x, y, flags, param):
         arr = []
         arr2 = []
         print(image.shape)
-        for i in range(582, 642):
+        for i in range(804, 824):
             #print(image[584][i])
-            arr.append(image[111][i])
+            arr.append(image[413][i])
             # cv2.circle(image,(i, 300), 10, (255,0,255))
         print(arr)
         # print("==============")
@@ -92,14 +92,14 @@ image_bytes = p.stdout.read().replace(b'\r\n', b'\n')
 # # f.close()
 nparr = np.frombuffer(image_bytes, np.uint8)
 image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-# print(os.path.exists('screen.png'))
-# image = cv2.imread('screen.png')
+# print(os.path.exists('screen0 - Copy.png'))
+# image = cv2.imread('screen0 - Copy.png')
 
 retval = p.wait()
 
-print(nparr.shape, image.shape)
-cv2.imwrite("screenCap.png", image)
-cv2.resize(image, (640, 360), interpolation = cv2.INTER_AREA)
+# print(nparr.shape, image.shape)
+# cv2.imwrite("screenCap.png", image)
+# cv2.resize(image, (640, 360), interpolation = cv2.INTER_AREA)
 
 # For Get Mouse Coordinate
 cv2.namedWindow("image", cv2.WINDOW_NORMAL)
