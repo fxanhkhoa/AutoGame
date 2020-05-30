@@ -128,6 +128,10 @@ def handler(signal_received, frame):
 def test():
     print(vm_manage.check_vm_running(0))
 
+def on_closing():
+    print("CLOSE TOOL")
+    vm_manage.stop_all_vm()
+    window.destroy()
 
 if __name__ == '__main__':
     # Tell Python to run the handler() function when SIGINT is recieved
@@ -155,7 +159,7 @@ if __name__ == '__main__':
     #### Process
     for i in range(0, config_obj['NUM_OF_THREAD']):
         print("creating {}".format(i))
-        memu_thr = memu_process_class(i, pic_folder = config_obj["picture_share_folder"], log_file = config_obj["log_file"], num_of_mode = config_obj["NUM_OF_MODE"][i], device_name = config_obj["nox_name"][i], account_name = config_obj["account_username"][i], account_password = config_obj["account_password"][i], time_to_reset_nox = config_obj["time_to_reset_nox"], claim_reward=config_obj["claim_reward"], claim_help=config_obj["claim_help"], time_get_reward_and_help=config_obj["time_get_reward_and_help"], time_check_freeze=config_obj["time_check_freeze"], time_to_wait_then_reconnect=config_obj["time_to_wait_then_reconnect"])
+        memu_thr = memu_process_class(i, pic_folder = config_obj["picture_share_folder"], log_file = config_obj["log_file"], num_of_mode = config_obj["NUM_OF_MODE"][i], device_name = config_obj["nox_name"][i], account_name = config_obj["account_username"][i], account_password = config_obj["account_password"][i], time_to_reset_nox = config_obj["time_to_reset_nox"], claim_reward=config_obj["claim_reward"], claim_help=config_obj["claim_help"], time_get_reward_and_help_from=config_obj["time_get_reward_and_help_from"], time_get_reward_and_help_to=config_obj["time_get_reward_and_help_to"], time_check_freeze=config_obj["time_check_freeze"], time_to_wait_then_reconnect=config_obj["time_to_wait_then_reconnect"])
         list_thread.append(memu_thr)
         list_thread[i].start()
         if i == 0:
@@ -181,6 +185,7 @@ if __name__ == '__main__':
 
     gridFrame.grid(row = 1, column = 0, padx=20)
 
+    window.protocol("WM_DELETE_WINDOW", on_closing)
 
     window.mainloop()
 

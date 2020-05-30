@@ -13,7 +13,7 @@ class memu_process_class (threading.Thread):
     process_running = True
     flag_exist_GET_MORE = False
 
-    def __init__(self, threadID, pic_folder, log_file, num_of_mode, device_name, account_name, account_password, time_to_reset_nox, claim_reward, claim_help, time_get_reward_and_help, time_check_freeze, time_to_wait_then_reconnect):
+    def __init__(self, threadID, pic_folder, log_file, num_of_mode, device_name, account_name, account_password, time_to_reset_nox, claim_reward, claim_help, time_get_reward_and_help_from, time_get_reward_and_help_to, time_check_freeze, time_to_wait_then_reconnect):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.pic_folder = pic_folder
@@ -34,7 +34,8 @@ class memu_process_class (threading.Thread):
         self.claim_reward = claim_reward
         self.claim_help = claim_help
 
-        self.time_get_reward_and_help = time_get_reward_and_help
+        self.time_get_reward_and_help_from = time_get_reward_and_help_from
+        self.time_get_reward_and_help_to = time_get_reward_and_help_to
         self.time_check_freeze = time_check_freeze
         self.time_to_wait_then_reconnect = time_to_wait_then_reconnect
 
@@ -80,6 +81,7 @@ class memu_process_class (threading.Thread):
         time.sleep(40)
         vm_manage.start_app(self.threadID)
         while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS():
+            vm_manage.start_app(self.threadID)
             self.capture_image()
             self.go_to_home()
 
@@ -98,13 +100,16 @@ class memu_process_class (threading.Thread):
                 vm_manage.start_app(self.threadID)
                 time.sleep(2)
 
+            print("DEBUG === Claim reward yet? {}".format(self.claim_and_help_once_session))
             if not self.claim_and_help_once_session:
                 # Time Process
-                timeCheck = int(self.time_get_reward_and_help.split(':')[0])
+                timeCheck_from = int(self.time_get_reward_and_help_from.split(':')[0])
+                timeCheck_to = int(self.time_get_reward_and_help_to.split(':')[0])
                 now = datetime.datetime.now()
                 print(now.year, now.month, now.day, now.hour, now.minute, now.second)
+                print("DEBUG === IN time claim? {}".format(self.claim_reward and int(now.hour) > timeCheck_from and int(now.hour) < timeCheck_to))
                 # Claim all reward
-                if (self.claim_reward and int(now.hour) > timeCheck and int(now.hour) < timeCheck + 2):
+                if (self.claim_reward and int(now.hour) >= timeCheck_from and int(now.hour) <= timeCheck_to):
                     self.execute_cmd_tap(183, 23)
                     time.sleep(2)
                     print("DEBUG === Click Inventory")
@@ -121,12 +126,12 @@ class memu_process_class (threading.Thread):
                     time.sleep(2)
                     while self.check_CLAIM_REWARD_LEFT():
                         self.execute_cmd_tap(647, 205)
-                        time.sleep(0.5)
+                        time.sleep(1.5)
                     time.sleep(1)
                     self.go_to_home()
 
                 # Alliance
-                if (self.claim_help and int(now.hour) > timeCheck and int(now.hour) < timeCheck + 2):
+                if (self.claim_help and int(now.hour) > timeCheck_from and int(now.hour) < timeCheck_to):
                     self.execute_cmd_tap(183, 23)
                     time.sleep(1)
                     print("DEBUG === Click Alliance")
@@ -139,7 +144,7 @@ class memu_process_class (threading.Thread):
                         if self.check_HELP_IS_FULL():
                             break
                         self.execute_cmd_tap(688, 174)
-                        time.sleep(1)
+                        time.sleep(1.5)
                     time.sleep(1)
                     self.go_to_home()
                 
@@ -207,6 +212,7 @@ class memu_process_class (threading.Thread):
                 self.go_to_home()
             elif self.check_MULTIVERSE_ARENAS():
                 number = self.arr_mode[self.mode_arena]
+                self.execute_cmd_swipe(180, 283, 50, 283)
                 print(number)
                 for i in range(number):
                     self.swipe_to_another_arena_mode()
@@ -214,7 +220,7 @@ class memu_process_class (threading.Thread):
                 if self.mode_arena == len(self.arr_mode) - 1:
                     self.click_continue_arena_on_right()
                 elif self.mode_arena == 0:
-                    self.execute_cmd_swipe(200, 100, 100, 100)
+                    # self.execute_cmd_swipe(200, 100, 100, 100)
                     self.click_continue_arena_3vs_3_3star()
                 else:
                     self.click_continue_arena_3vs_3_3star()
@@ -821,11 +827,15 @@ class memu_process_class (threading.Thread):
         if (self.try_count > 7):
             return
         # Swipe to make 3vs3
-        print("DEBUG === swipe_to_another_arena_mode")
-        self.execute_cmd_swipe(204, 283, 50, 283)
+        # print("DEBUG === swipe_to_another_arena_mode")
+        # self.execute_cmd_swipe(340, 283, 50, 283)
 
         print("DEBUG === swipe_to_another_arena_mode")
-        self.execute_cmd_swipe(204, 283, 50, 283)
+        self.execute_cmd_swipe(340, 283, 245, 283)
+        self.execute_cmd_swipe(340, 283, 245, 283)
+        self.execute_cmd_swipe(340, 283, 245, 283)
+        self.execute_cmd_swipe(340, 283, 245, 283)
+
 
     def check_in_PICKING_PHASE(self):
         try:
@@ -1602,6 +1612,7 @@ class memu_process_class (threading.Thread):
     def execute_cmd_input_text(self, text):
         cmd = 'nox_adb.exe -s {} shell input text {}'.format(self.device_name, text)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        retval = p.wait()
 
     def random_swipe_right(self):
         x = randrange()

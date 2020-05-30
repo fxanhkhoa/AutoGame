@@ -42,6 +42,12 @@ class vm_manage:
         retval = p.wait()
 
     @staticmethod
+    def stop_all_vm():
+        cmd = 'noxconsole quitall'
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        retval = p.wait()
+
+    @staticmethod
     def stop_app(index):
         cmd = 'memuc stopapp -i {} com.kabam.marvelbattle'.format(index)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
