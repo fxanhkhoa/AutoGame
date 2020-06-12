@@ -13,7 +13,7 @@ class memu_process_class (threading.Thread):
     process_running = True
     flag_exist_GET_MORE = False
 
-    def __init__(self, threadID, pic_folder, log_file, num_of_mode, device_name, account_name, account_password, time_to_reset_nox, claim_reward, claim_help, time_get_reward_and_help_from, time_get_reward_and_help_to, time_check_freeze, time_to_wait_then_reconnect):
+    def __init__(self, threadID, pic_folder, log_file, num_of_mode, device_name, account_name, account_password, time_to_reset_nox, claim_reward, claim_help, time_get_reward_and_help_from, time_get_reward_and_help_to, time_check_freeze, time_to_wait_then_reconnect, time_reset_claim_reward):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.pic_folder = pic_folder
@@ -22,8 +22,37 @@ class memu_process_class (threading.Thread):
         self.try_count = 0
         self.try_count_when_auto_hit = 0
 
-        self.arr_mode = num_of_mode
-        self.mode_arena = len(num_of_mode) - 1
+        # TODO: Get Time to time_to_run_mode
+        self.mode_list = num_of_mode["mode_list"]
+        self.time_to_run_mode = []
+        for item in self.mode_list:
+            _time = item["time"]
+            mode = item["mode"]
+            print(_time)
+            time_start = _time.split('-')[0]
+            time_end = _time.split('-')[1]
+            time_start_full = {
+                "hour": int(time_start.split(':')[0]),
+                "minute": int(time_start.split(':')[1])
+            }
+            time_end_full = {
+                "hour": int(time_end.split(':')[0]),
+                "minute": int(time_end.split(':')[1])
+            }
+            mode_time = {
+                "time_start": time_start_full,
+                "time_end": time_end_full,
+                "mode": mode
+            }
+            self.time_to_run_mode.append(mode_time)
+            print(self.time_to_run_mode)
+
+        print("choose: ",self.get_pick_mode())   
+        self.current_object = self.get_pick_mode()
+        self.arr_mode = self.current_object["mode"]
+        self.mode_arena = len(self.arr_mode) - 1
+
+        # print('compare', self.time_to_run_mode[0] == self.time_to_run_mode[0])
 
         self.start_time = time.time()
         self.start_time_reset = time.time()
@@ -45,6 +74,9 @@ class memu_process_class (threading.Thread):
         self.pause_signal = False
 
         self.claim_and_help_once_session = False
+        self.claim_history_time = time.time()
+
+        self.time_reset_claim_reward = time_reset_claim_reward
 
         # connect with emulator
         print("DEBUG === Connect to {}".format(self.device_name))
@@ -80,8 +112,8 @@ class memu_process_class (threading.Thread):
         vm_manage.close_AR(self.threadID)
         time.sleep(40)
         vm_manage.start_app(self.threadID)
-        while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS():
-            vm_manage.start_app(self.threadID)
+        while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS() and not self.check_SPECIAL_GIFT() and not self.check_RECONNECT() and not self.check_RECONNECT_MAINTAINANCE():
+            # vm_manage.start_app(self.threadID)
             self.capture_image()
             self.go_to_home()
 
@@ -90,65 +122,128 @@ class memu_process_class (threading.Thread):
             if self.pause_signal:
                 continue
             print(self.mode_arena)
+            # Get one Image
+            self.capture_image()
+
+            if time.time() - self.claim_history_time > self.time_reset_claim_reward:
+                self.claim_and_help_once_session = False
+                self.claim_history_time = time.time()
+            
             if time.time() - self.start_time > self.time_to_reset_nox:
                 self.start_time = time.time()
                 self.freeze_time = time.time()
                 self.flag_check_loading = False
-                self.claim_and_help_once_session = False
+                # self.claim_and_help_once_session = False
                 vm_manage.reboot_vm(self.threadID)
                 time.sleep(90)
+                 # Launch AR once
+                vm_manage.open_AR(self.threadID)
+                time.sleep(20)
+                # Check Login AR
+                self.execute_cmd_swipe(800, 400, 800, 20)
+                self.capture_image()
+                if self.check_AR_LOGGED_OUT():
+                    print("DEBUG === click username field")
+                    self.execute_cmd_tap(141, 76)
+                    time.sleep(3)
+                    print("DEBUG === input username: {}".format(self.account_name))
+                    self.execute_cmd_input_text(self.account_name)
+                    time.sleep(3)
+                    print("DEBUG === click password field")
+                    self.execute_cmd_tap(112, 247)
+                    time.sleep(3)
+                    print("DEBUG === input username: {}".format(self.account_password))
+                    self.execute_cmd_input_text(self.account_password)
+                    time.sleep(3)
+                    print("DEBUG === click Login")
+                    self.execute_cmd_tap(415, 354)
+                    time.sleep(5)
+
+                # Close AR and go to game
+                vm_manage.close_AR(self.threadID)
+                time.sleep(40)
                 vm_manage.start_app(self.threadID)
                 time.sleep(2)
-
-            print("DEBUG === Claim reward yet? {}".format(self.claim_and_help_once_session))
-            if not self.claim_and_help_once_session:
-                # Time Process
-                timeCheck_from = int(self.time_get_reward_and_help_from.split(':')[0])
-                timeCheck_to = int(self.time_get_reward_and_help_to.split(':')[0])
-                now = datetime.datetime.now()
-                print(now.year, now.month, now.day, now.hour, now.minute, now.second)
-                print("DEBUG === IN time claim? {}".format(self.claim_reward and int(now.hour) > timeCheck_from and int(now.hour) < timeCheck_to))
-                # Claim all reward
-                if (self.claim_reward and int(now.hour) >= timeCheck_from and int(now.hour) <= timeCheck_to):
-                    self.execute_cmd_tap(183, 23)
-                    time.sleep(2)
-                    print("DEBUG === Click Inventory")
-                    self.execute_cmd_tap(605, 83)
-                    time.sleep(2)
-                    print("DEBUG === Click Items")
-                    self.execute_cmd_tap(529, 250)
-                    time.sleep(2)
-                    print("DEBUG === Click Box")
-                    self.execute_cmd_tap(810, 77)
-                    time.sleep(2)
-                    print("DEBUG === Click Rewards")
-                    self.execute_cmd_tap(167, 72)
-                    time.sleep(2)
-                    while self.check_CLAIM_REWARD_LEFT():
-                        self.execute_cmd_tap(647, 205)
-                        time.sleep(1.5)
-                    time.sleep(1)
+                while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS() and not self.check_SPECIAL_GIFT() and not self.check_RECONNECT():
+                    # vm_manage.start_app(self.threadID)
+                    if self.check_CANNOT_OPEN_APP():
+                        vm_manage.start_app(self.threadID)
+                    elif self.check_CrashApp():
+                        vm_manage.reboot_vm(self.threadID)
+                        time.sleep(90)
+                        vm_manage.start_app(self.threadID)
+                        time.sleep(2)
+                    self.capture_image()
                     self.go_to_home()
 
-                # Alliance
-                if (self.claim_help and int(now.hour) > timeCheck_from and int(now.hour) < timeCheck_to):
-                    self.execute_cmd_tap(183, 23)
-                    time.sleep(1)
-                    print("DEBUG === Click Alliance")
-                    self.execute_cmd_tap(324, 89)
-                    time.sleep(5)
-                    print("DEBUG === Click Help")
-                    self.execute_cmd_tap(474, 129)
-                    time.sleep(2)
-                    while self.check_HELP():
-                        if self.check_HELP_IS_FULL():
-                            break
-                        self.execute_cmd_tap(688, 174)
-                        time.sleep(1.5)
-                    time.sleep(1)
-                    self.go_to_home()
-                
-                self.claim_and_help_once_session = True
+            if self.check_FIGHT_BUTTON():
+                print("DEBUG === Claim reward yet? {}".format(self.claim_and_help_once_session))
+                if not self.claim_and_help_once_session:
+                    # Time Process
+                    timeCheck_from = int(self.time_get_reward_and_help_from.split(':')[0])
+                    timeCheck_to = int(self.time_get_reward_and_help_to.split(':')[0])
+                    now = datetime.datetime.now()
+                    print(now.year, now.month, now.day, now.hour, now.minute, now.second)
+                    print("DEBUG === IN time claim? {}".format(self.claim_reward and int(now.hour) > timeCheck_from and int(now.hour) < timeCheck_to))
+                    # Claim all reward
+                    if (self.claim_reward and int(now.hour) >= timeCheck_from and int(now.hour) <= timeCheck_to):
+                        self.execute_cmd_tap(183, 23)
+                        time.sleep(2)
+                        
+                        while not self.check_INVENTORY():
+                            self.capture_image()
+                        print("DEBUG === Click Inventory")
+                        self.execute_cmd_tap(605, 83)
+                        time.sleep(2)
+
+                        while not self.check_ITEM():
+                            self.capture_image()
+                        print("DEBUG === Click Items")
+                        self.execute_cmd_tap(529, 250)
+                        time.sleep(2)
+
+                        while not self.check_BOX():
+                            self.capture_image()
+                        print("DEBUG === Click Box")
+                        self.execute_cmd_tap(810, 77)
+                        time.sleep(2)
+
+                        while not self.check_INVENTORY_REWARD():
+                            self.capture_image()
+                        print("DEBUG === Click Rewards")
+                        self.execute_cmd_tap(167, 72)
+                        time.sleep(2)
+
+                        while self.check_CLAIM_REWARD_LEFT():
+                            self.execute_cmd_tap(647, 205)
+                            time.sleep(2)
+                        # for i in range(0, 100):
+                        #     self.execute_cmd_tap(647, 205)
+                        #     print("DEBUG === Click Claim")
+                        #     time.sleep(2)
+                        time.sleep(1)
+                        self.go_to_home()
+
+                    # Alliance
+                    if (self.claim_help and int(now.hour) > timeCheck_from and int(now.hour) < timeCheck_to):
+                        self.execute_cmd_tap(183, 23)
+                        time.sleep(1)
+                        print("DEBUG === Click Alliance")
+                        self.execute_cmd_tap(324, 89)
+                        time.sleep(5)
+                        print("DEBUG === Click Help")
+                        self.execute_cmd_tap(474, 129)
+                        time.sleep(2)
+                        while self.check_HELP():
+                            if self.check_HELP_IS_FULL():
+                                break
+                            self.execute_cmd_tap(688, 174)
+                            time.sleep(1.5)
+                        time.sleep(1)
+                        self.go_to_home()
+                    
+                    self.claim_and_help_once_session = True
+                    self.claim_history_time = time.time()
 
             if self.check_file_is_not_modified_in_10mins():
                 self.start_time = time.time() + 3601
@@ -156,14 +251,13 @@ class memu_process_class (threading.Thread):
             if self.mode_arena < 0:
                 self.mode_arena = len(self.arr_mode) - 1
 
-            # Get one Image
-            self.capture_image()
+            
 
             if not self.process_running:
                 return
             elif self.check_IN_FIGHTING() or self.check_NEXT_FIGHT():
                 self.try_count_when_auto_hit = 0
-                while not self.check_CONTINUE():
+                while not self.check_CONTINUE() and not self.check_BACK_TO_ARENA():
                     if self.pause_signal:
                         continue
                     self.capture_image()
@@ -172,11 +266,13 @@ class memu_process_class (threading.Thread):
                         print("DEBUG === Click ULTIMATE SKILL")
                         self.execute_cmd_tap(126, 431)
                     # self.auto_hit()
+                    elif self.check_ERROR_HERO_NOT_FOUND():
+                        self.execute_cmd_tap(425, 311)
                     elif self.check_IN_DIALY_QUEST():
                         self.go_to_home()
                         time.sleep(1)
                         break
-                    elif self.check_RECONNECT():
+                    elif self.check_RECONNECT() or self.check_RECONNECT_MAINTAINANCE():
                         time.sleep(self.time_to_wait_then_reconnect)
                         self.start_time = time.time() - 3601
                         break
@@ -198,9 +294,15 @@ class memu_process_class (threading.Thread):
                         # self.go_to_home()
                         break
                 # if self.try_count_when_auto_hit < 15:
-                self.click_NEXT_SERIES()
+                self.click_CONTINUE()
+                self.click_claim_achive()
                 self.click_CONTINUE()
                 self.freeze_time = time.time()
+            elif self.check_achived():
+                self.click_claim_achive()
+                self.click_NEXT_SERIES()
+            elif self.check_ERROR_HERO_NOT_FOUND():
+                self.execute_cmd_tap(425, 311)
             elif self.check_FIGHT_BUTTON():
                 self.freeze_time = time.time()
                 self.go_to_fight()
@@ -211,13 +313,19 @@ class memu_process_class (threading.Thread):
                 self.mode_arena = self.mode_arena - 1
                 self.go_to_home()
             elif self.check_MULTIVERSE_ARENAS():
+                if (self.current_object != self.get_pick_mode() and self.get_pick_mode() != None):
+                    self.current_object = self.get_pick_mode()
+                    self.arr_mode = self.current_object["mode"]
+                    self.mode_arena = len(self.arr_mode) - 1
                 number = self.arr_mode[self.mode_arena]
                 self.execute_cmd_swipe(180, 283, 50, 283)
                 print(number)
                 for i in range(number):
                     self.swipe_to_another_arena_mode()
                 time.sleep(1)
-                if self.mode_arena == len(self.arr_mode) - 1:
+                if self.mode_arena == len(self.arr_mode) - 1 and number == 0:
+                    self.click_continue_arena_3vs_3_3star()
+                elif self.mode_arena == len(self.arr_mode) - 1:
                     self.click_continue_arena_on_right()
                 elif self.mode_arena == 0:
                     # self.execute_cmd_swipe(200, 100, 100, 100)
@@ -240,11 +348,17 @@ class memu_process_class (threading.Thread):
                     self.start_time = time.time() - 3601
             elif self.check_NEXT_FIGHT():
                 self.click_NEXT_FIGHT()
-            elif self.check_CONTINUE():
+            elif self.check_CONTINUE() or self.check_BACK_TO_ARENA():
                 self.click_CONTINUE()
             elif self.check_ACCEPT():
                 self.click_ACCEPT()
             elif self.check_in_PICKING_PHASE():
+                if (self.current_object != self.get_pick_mode() and self.get_pick_mode() != None):
+                    self.current_object = self.get_pick_mode()
+                    self.arr_mode = self.current_object["mode"]
+                    self.mode_arena = len(self.arr_mode) - 1
+                    self.go_to_home()
+                    continue
                 self.try_count = 0
                 self.freeze_time = time.time()
                 while self.check_GET_HELP_and_CLICK():
@@ -307,13 +421,15 @@ class memu_process_class (threading.Thread):
                 self.mode_arena = self.mode_arena - 1
             elif self.check_WARNING_NETWORK():
                 self.execute_cmd_tap(427, 279)
-            elif self.check_RECONNECT():
+            elif self.check_RECONNECT() or self.check_RECONNECT_MAINTAINANCE():
                 time.sleep(self.time_to_wait_then_reconnect)
                 self.start_time = time.time() - 3601
             elif self.check_FIGHT_RECOVER():
                 self.click_FIGHT_RECOVER()
             elif self.check_TODAY_REWARD():
                 self.click_X_TODAY_REWARD()
+            elif self.check_SPECIAL_GIFT():
+                self.execute_cmd_tap(424, 434)
             elif self.check_INCURSIONS():
                 self.click_X_INCURSION()
             elif self.check_X_EXIST():
@@ -374,6 +490,23 @@ class memu_process_class (threading.Thread):
             self.pause_signal = False
         else:
             self.pause_signal = True
+    
+    def get_pick_mode(self):
+        for item in self.time_to_run_mode:
+            now = datetime.datetime.now()
+            print(now.year, now.month, now.day, now.hour, now.minute, now.second)
+            if (item["time_start"]["hour"] < now.hour or now.hour < item["time_end"]["hour"]):
+                return item
+            elif (item["time_start"]["hour"] == now.hour) and (now.hour < item["time_end"]["hour"]):
+                if item["time_start"]["minute"] <= now.minute:
+                    return item
+            elif (item["time_start"]["hour"] < now.hour) and (now.hour == item["time_end"]["hour"]):
+                if item["time_end"]["minute"] >= now.minute:
+                    return item
+            elif (item["time_start"]["hour"] == now.hour) and (now.hour == item["time_end"]["hour"]):
+                if item["time_start"]["minute"] <= now.minute <= item["time_end"]["minute"]:
+                    return item
+        return None
 
     def go_to_home(self):
         print("DEBUG === GO TO HOME {}".format(self.device_name))
@@ -827,14 +960,14 @@ class memu_process_class (threading.Thread):
         if (self.try_count > 7):
             return
         # Swipe to make 3vs3
-        # print("DEBUG === swipe_to_another_arena_mode")
-        # self.execute_cmd_swipe(340, 283, 50, 283)
-
         print("DEBUG === swipe_to_another_arena_mode")
-        self.execute_cmd_swipe(340, 283, 245, 283)
-        self.execute_cmd_swipe(340, 283, 245, 283)
-        self.execute_cmd_swipe(340, 283, 245, 283)
-        self.execute_cmd_swipe(340, 283, 245, 283)
+        self.execute_cmd_swipe(340, 283, 50, 283)
+
+        # print("DEBUG === swipe_to_another_arena_mode")
+        # self.execute_cmd_swipe(340, 283, 245, 283)
+        # self.execute_cmd_swipe(340, 283, 245, 283)
+        # self.execute_cmd_swipe(340, 283, 245, 283)
+        # self.execute_cmd_swipe(340, 283, 245, 283)
 
 
     def check_in_PICKING_PHASE(self):
@@ -1304,7 +1437,7 @@ class memu_process_class (threading.Thread):
             # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
-            arr = [[  0,   9, 145], [  0,   9, 145], [  0,   9, 145], [  0,   9, 145], [  1,   9, 143], [  1,   9, 141], [  2,  10, 142], [  2,  10, 142], [  1,   9, 141], [  1,   9, 141], [  1,   9, 141], [  1,   9, 141], [  1,   9, 141], [  1,   9, 141], [  0,   8, 140], [  0,   7, 139], [  0,   7, 139], [  0,   7, 139], [  0,   7, 139], [  0,   7, 139], [  0,   6, 138], [  0,   6, 138], [  0,   6, 138], [  0,   6, 138], [  0,   6, 138], [  0,   6, 138], [  0,   6, 138], [  0,   6, 138], [  0,   6, 138], [  0,   5, 137], [  0,   4, 136], [  0,   5, 137], [  0,   6, 138], [  0,   6, 138], [  0,   7, 136], [  0,   8, 132], [  0,   8, 132], [  0,   8, 132], [  0,   9, 133], [  0,   9, 133], [  1,   9, 133], [  0,   8, 132], [  0,   8, 132], [  0,   7, 131], [  0,   7, 131], [  0,   8, 132], [  0,   7, 131], [  0,   7, 131], [  0,   8, 132], [  0,   8, 132]]
+            arr = [[241, 224, 224], [254, 219, 219], [180, 123, 126], [133, 116, 133], [153, 122, 129], [166, 125, 125], [182, 141, 141], [160, 123, 122], [143, 126, 118], [157, 132, 123], [175, 142, 133], [186, 137, 136], [190, 142, 142], [67, 41, 41], [74, 53, 57], [89, 81, 89], [57, 49, 57], [65, 58, 66], [59, 59, 68], [62, 62, 71], [58, 58, 67], [61, 54, 62], [49, 41, 49], [45, 37, 45], [50, 45, 53], [53, 53, 61], [56, 50, 58], [47, 39, 47], [50, 42, 50], [56, 48, 56], [52, 44, 52], [48, 40, 48], [61, 53, 61], [55, 47, 55], [57, 47, 55], [58, 42, 50], [68, 45, 48], [62, 36, 36], [51, 27, 27], [52, 28, 28], [52, 27, 27], [52, 28, 28], [55, 31, 31], [60, 43, 43], [113,  92,  88], [155, 121, 104], [121,  97,  80], [80, 63, 46], [80, 55, 47], [81, 56, 48]]
 
             res = True
 
@@ -1506,6 +1639,257 @@ class memu_process_class (threading.Thread):
             return res
         except:
             return False
+
+    def check_BACK_TO_ARENA(self):
+        try:
+            print("DEBUG === check_BACK_TO_ARENA")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 31, 102,  33], [230, 238, 230], [225, 234, 225], [210, 224, 211], [255, 255, 255], [151, 184, 152], [ 9, 86, 11], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 66, 126,  68], [255, 255, 255], [225, 234, 225], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [165, 193, 165], [255, 255, 255], [102, 150, 104], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [178, 202, 179], [255, 255, 255], [ 80, 135,  81], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 37, 106,  39], [249, 251, 249], [172, 198, 173], [ 8, 86, 10], [161, 190, 161]]
+
+            res = True
+
+            x = 729
+            x1 = 776
+            y = 450
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+
+            arr = [[ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [  0, 255,   0], [ 7, 85,  9], [166, 194, 166], [  0, 255,   0], [195, 214, 195], [255, 255, 255], [205, 221, 206], [15, 90, 17], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 29, 100,  31], [237, 243, 238], [239, 244, 240], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 95, 145,  96], [255, 255, 255], [222, 232, 222], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 81, 136,  82], [255, 255, 255], [189, 210, 189], [10, 87, 12], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [23, 96, 24], [241, 246, 241], [226, 235, 226], [10, 87, 12], [ 90, 142,  91]]
+
+            res2 = True
+
+            x = 729
+            x1 = 776
+            y = 450
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res2 = False
+                    break
+            print(res2)
+
+            arr = [[ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [166, 194, 166], [255, 255, 255], [195, 214, 195], [255, 255, 255], [205, 221, 206], [15, 90, 17], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 29, 100,  31], [237, 243, 238], [239, 244, 240], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 95, 145,  96], [255, 255, 255], [222, 232, 222], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 81, 136,  82], [255, 255, 255], [189, 210, 189], [10, 87, 12], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [23, 96, 24], [241, 246, 241], [226, 235, 226], [10, 87, 12], [ 90, 142,  91]]
+
+            res3 = True
+
+            x = 729
+            x1 = 776
+            y = 450
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res3 = False
+                    break
+            
+            print(res3)
+
+            arr = [[ 9, 86, 11], [115, 159, 116], [255, 255, 255], [134, 172, 135], [ 8, 86, 10], [ 52, 116,  53], [255, 255, 255], [254, 254, 254], [11, 88, 13], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [115, 159, 116], [255, 255, 255], [182, 205, 183], [241, 246, 241], [234, 240, 234], [ 35, 104,  37], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [167, 195, 168], [252, 253, 252], [ 72, 130,  74], [ 7, 85,  9], [ 7, 85,  9], [ 56, 118,  57], [255, 255, 255], [249, 251, 249], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 7, 85,  9], [ 45, 111,  47], [255, 255, 255]]
+
+            res4 = True
+
+            x = 571
+            x1 = 615
+            y = 450
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res4 = False
+                    break
+            
+            print(res4)
+
+            return res or res2 or res3 or res4
+        except:
+            return False
+
+    def check_INVENTORY(self):
+        try:
+            print("DEBUG === check_INVENTORY")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[11, 90, 13], [103, 152, 104], [193, 213, 193], [159, 190, 160], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [11, 90, 13], [ 62, 124,  63], [192, 212, 192], [190, 211, 190], [21, 96, 22], [134, 173, 135], [193, 213, 193], [193, 213, 193], [ 56, 120,  58], [22, 97, 23], [169, 197, 170], [193, 213, 193], [ 68, 129,  70], [11, 90, 13]]
+
+            res = True
+
+            x = 592
+            x1 = 621
+            y = 83
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False
+
+    def check_ITEM(self):
+        try:
+            print("DEBUG === check_ITEM")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[ 6, 83,  7], [ 6, 83,  7], [ 88, 140,  89], [255, 255, 255], [199, 217, 200], [ 6, 83,  7], [ 6, 83,  7], [ 6, 83,  7], [133, 171, 133], [255, 255, 255], [115, 159, 116], [ 6, 83,  7], [ 6, 83,  7], [ 30, 100,  31], [237, 243, 237], [255, 255, 255], [121, 163, 122], [110, 154, 110], [110, 154, 110], [110, 154, 110], [110, 154, 110], [ 63, 122,  63], [ 6, 83,  7], [168, 195, 168], [255, 255, 255], [ 68, 125,  68], [205, 221, 205], [234, 240, 234], [ 44, 109,  45], [239, 244, 239], [185, 206, 185], [28, 99, 29], [247, 250, 247], [175, 200, 175], [ 6, 83,  7], [ 6, 83,  7], [ 56, 117,  57], [115, 159, 116], [130, 169, 131], [131, 169, 131], [133, 171, 133], [169, 196, 169], [253, 254, 253], [207, 222, 207], [15, 89, 16], [ 6, 83,  7]]
+
+            res = True
+
+            x = 504
+            x1 = 550
+            y = 332
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False
+
+    def check_BOX(self):
+        try:
+            print("DEBUG === check_BOX")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255]]
+
+            res = True
+
+            x = 404
+            x1 = 411
+            y = 76
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False
+    
+    def check_INVENTORY_REWARD(self):
+        try:
+            print("DEBUG === check_INVENTORY_REWARD")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[64, 64, 64], [64, 64, 64], [226, 226, 226], [228, 228, 228], [222, 222, 222], [222, 222, 222], [225, 225, 225], [244, 244, 244], [201, 201, 201], [73, 73, 73], [74, 74, 74], [251, 251, 251], [159, 159, 159], [136, 136, 136], [136, 136, 136], [136, 136, 136], [134, 134, 134], [81, 81, 81], [64, 64, 64], [111, 111, 111], [209, 209, 209], [64, 64, 64], [74, 74, 74], [235, 235, 235], [79, 79, 79], [64, 64, 64], [91, 91, 91], [227, 227, 227], [66, 66, 66], [64, 64, 64], [221, 221, 221], [91, 91, 91], [64, 64, 64], [64, 64, 64], [107, 107, 107], [216, 216, 216], [64, 64, 64], [64, 64, 64], [69, 69, 69], [227, 227, 227]]
+
+            res = True
+
+            x = 129
+            x1 = 169
+            y = 75
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False
+
+    def check_SPECIAL_GIFT(self):
+        try:
+            print("DEBUG === check_SPECIAL_GIFT")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[64, 64, 64], [64, 64, 64], [226, 226, 226], [228, 228, 228], [222, 222, 222], [222, 222, 222], [225, 225, 225], [244, 244, 244], [201, 201, 201], [73, 73, 73], [74, 74, 74], [251, 251, 251], [159, 159, 159], [136, 136, 136], [136, 136, 136], [136, 136, 136], [134, 134, 134], [81, 81, 81], [64, 64, 64], [111, 111, 111], [209, 209, 209], [64, 64, 64], [74, 74, 74], [235, 235, 235], [79, 79, 79], [64, 64, 64], [91, 91, 91], [227, 227, 227], [66, 66, 66], [64, 64, 64], [221, 221, 221], [91, 91, 91], [64, 64, 64], [64, 64, 64], [107, 107, 107], [216, 216, 216], [64, 64, 64], [64, 64, 64], [69, 69, 69], [227, 227, 227]]
+
+            res = True
+
+            x = 383
+            x1 = 435
+            y = 159
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False
+
+    def check_CANNOT_OPEN_APP(self):
+        try:
+            print("DEBUG === check_CANNOT_OPEN_APP")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255]]
+
+            res = True
+
+            x = 390
+            x1 = 506
+            y = 105
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False    
+
+    def check_ERROR_HERO_NOT_FOUND(self):
+        try:
+            print("DEBUG === check_ERROR_HERO_NOT_FOUND")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [136, 136, 137], [47, 47, 49], [164, 164, 165], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [235, 235, 236], [78, 78, 80], [47, 47, 49], [49, 49, 51], [200, 200, 201], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 255, 255], [222, 222, 223], [63, 63, 65]]
+
+            res = True
+
+            x = 399
+            x1 = 431
+            y = 151
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False    
+        
+    def check_RECONNECT_MAINTAINANCE(self):
+        try:
+            print("DEBUG === check_RECONNECT_MAINTAINANCE")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[ 5, 82,  7], [165, 193, 166], [255, 255, 255], [ 78, 132,  79], [ 5, 82,  7], [18, 91, 20], [226, 235, 226], [254, 254, 254], [ 55, 117,  57], [ 6, 83,  8], [171, 197, 171], [255, 255, 255], [129, 167, 130], [ 7, 83,  9], [ 5, 82,  7], [ 5, 82,  7], [ 5, 82,  7], [ 5, 82,  7], [12, 87, 14], [238, 243, 238], [255, 255, 255], [ 84, 137,  86], [ 6, 83,  8], [ 5, 82,  7], [ 5, 82,  7], [ 5, 82,  7], [10, 85, 12], [217, 229, 217], [255, 255, 255], [124, 164, 125], [ 7, 83,  9], [ 5, 82,  7]]
+
+            res = True
+
+            x = 386
+            x1 = 418
+            y = 285
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+            return res
+        except:
+            return False    
 
     def check_IN_DIALY_QUEST(self):
         try:

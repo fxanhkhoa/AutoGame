@@ -1,0 +1,26 @@
+<annotation>
+	<folder>dataset</folder>
+	<filename>045.png</filename>
+	<path>D:\My_Work\AutoGame\nox_auto_quest_1.0\dataset\045.png</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>854</width>
+		<height>480</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>green</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>489</xmin>
+			<ymin>283</ymin>
+			<xmax>510</xmax>
+			<ymax>299</ymax>
+		</bndbox>
+	</object>
+</annotation>
