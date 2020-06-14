@@ -13,7 +13,7 @@ class memu_process_class (threading.Thread):
     process_running = True
     flag_exist_GET_MORE = False
 
-    def __init__(self, threadID, pic_folder, log_file, num_of_mode, device_name, account_name, account_password, time_to_reset_nox, claim_reward, claim_help, time_get_reward_and_help_from, time_get_reward_and_help_to, time_check_freeze, time_to_wait_then_reconnect, time_reset_claim_reward):
+    def __init__(self, threadID, pic_folder, log_file, num_of_mode, device_name, account_name, account_password, time_to_reset_nox, claim_reward, claim_help, time_get_reward_and_help_from, time_get_reward_and_help_to, time_check_freeze, time_to_wait_then_reconnect, time_reset_claim_reward, time_wait_after_nox_reset):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.pic_folder = pic_folder
@@ -67,6 +67,7 @@ class memu_process_class (threading.Thread):
         self.time_get_reward_and_help_to = time_get_reward_and_help_to
         self.time_check_freeze = time_check_freeze
         self.time_to_wait_then_reconnect = time_to_wait_then_reconnect
+        self.time_wait_after_nox_reset = time_wait_after_nox_reset
 
         self.account_name = account_name
         self.account_password = account_password
@@ -91,7 +92,7 @@ class memu_process_class (threading.Thread):
 
         # Launch AR once
         vm_manage.open_AR(self.threadID)
-        time.sleep(60)
+        time.sleep(self.time_wait_after_nox_reset)
         # Check Login AR
         self.execute_cmd_swipe(800, 400, 800, 20)
         self.capture_image()
@@ -110,11 +111,61 @@ class memu_process_class (threading.Thread):
 
         # Close AR and go to game
         vm_manage.close_AR(self.threadID)
-        time.sleep(40)
+        time.sleep(self.time_wait_after_nox_reset)
         vm_manage.start_app(self.threadID)
         while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS() and not self.check_SPECIAL_GIFT() and not self.check_RECONNECT() and not self.check_RECONNECT_MAINTAINANCE():
             # vm_manage.start_app(self.threadID)
+            if self.check_CANNOT_OPEN_APP():
+                vm_manage.start_app(self.threadID)
+            elif self.check_CrashApp():
+                vm_manage.reboot_vm(self.threadID)
+                time.sleep(self.time_wait_after_nox_reset)
+                vm_manage.open_AR(self.threadID)
+                time.sleep(self.time_wait_after_nox_reset - 20)
+                # Check Login AR
+                self.execute_cmd_swipe(800, 400, 800, 20)
+                self.capture_image()
+                if self.check_AR_LOGGED_OUT():
+                    print("DEBUG === click username field")
+                    self.execute_cmd_tap(141, 76)
+                    print("DEBUG === input username: {}".format(self.account_name))
+                    self.execute_cmd_input_text(self.account_name)
+                    print("DEBUG === click password field")
+                    self.execute_cmd_tap(112, 247)
+                    print("DEBUG === input username: {}".format(self.account_password))
+                    self.execute_cmd_input_text(self.account_password)
+                    print("DEBUG === click Login")
+                    self.execute_cmd_tap(415, 354)
+                    time.sleep(5)
+
+                # Close AR and go to game
+                vm_manage.close_AR(self.threadID)
+                time.sleep(self.time_wait_after_nox_reset - 10)
+                vm_manage.start_app(self.threadID)
+                time.sleep(2)
             self.capture_image()
+            self.go_to_home()
+
+        # Return home if in fight
+        if (self.check_FIGHT_RECOVER()):
+            self.click_FIGHT_RECOVER()
+            self.freeze_time = time.time()
+            while not self.check_IN_FIGHTING():
+                self.capture_image()
+                print(time.time() - self.freeze_time > self.time_check_freeze)
+                if time.time() - self.freeze_time > self.time_check_freeze:
+                    self.start_time = time.time() - self.time_to_reset_nox
+                    break
+                pass
+            print("click pause")
+            self.execute_cmd_tap(427, 20)
+            time.sleep(2)
+            print("click quit")
+            self.execute_cmd_tap(219, 430)
+            time.sleep(2)
+            print("click quit")
+            self.execute_cmd_tap(506, 273)
+            time.sleep(3)
             self.go_to_home()
 
        
@@ -130,15 +181,21 @@ class memu_process_class (threading.Thread):
                 self.claim_history_time = time.time()
             
             if time.time() - self.start_time > self.time_to_reset_nox:
+                # Refresh mode
+                print("choose: ",self.get_pick_mode())   
+                self.current_object = self.get_pick_mode()
+                self.arr_mode = self.current_object["mode"]
+                self.mode_arena = len(self.arr_mode) - 1
+
                 self.start_time = time.time()
                 self.freeze_time = time.time()
                 self.flag_check_loading = False
                 # self.claim_and_help_once_session = False
                 vm_manage.reboot_vm(self.threadID)
-                time.sleep(90)
+                time.sleep(self.time_wait_after_nox_reset)
                  # Launch AR once
                 vm_manage.open_AR(self.threadID)
-                time.sleep(20)
+                time.sleep(self.time_wait_after_nox_reset - 20)
                 # Check Login AR
                 self.execute_cmd_swipe(800, 400, 800, 20)
                 self.capture_image()
@@ -161,7 +218,7 @@ class memu_process_class (threading.Thread):
 
                 # Close AR and go to game
                 vm_manage.close_AR(self.threadID)
-                time.sleep(40)
+                time.sleep(self.time_wait_after_nox_reset - 20)
                 vm_manage.start_app(self.threadID)
                 time.sleep(2)
                 while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS() and not self.check_SPECIAL_GIFT() and not self.check_RECONNECT():
@@ -170,11 +227,50 @@ class memu_process_class (threading.Thread):
                         vm_manage.start_app(self.threadID)
                     elif self.check_CrashApp():
                         vm_manage.reboot_vm(self.threadID)
-                        time.sleep(90)
+                        time.sleep(self.time_wait_after_nox_reset)
+                        vm_manage.open_AR(self.threadID)
+                        time.sleep(self.time_wait_after_nox_reset - 20)
+                        # Check Login AR
+                        self.execute_cmd_swipe(800, 400, 800, 20)
+                        self.capture_image()
+                        if self.check_AR_LOGGED_OUT():
+                            print("DEBUG === click username field")
+                            self.execute_cmd_tap(141, 76)
+                            print("DEBUG === input username: {}".format(self.account_name))
+                            self.execute_cmd_input_text(self.account_name)
+                            print("DEBUG === click password field")
+                            self.execute_cmd_tap(112, 247)
+                            print("DEBUG === input username: {}".format(self.account_password))
+                            self.execute_cmd_input_text(self.account_password)
+                            print("DEBUG === click Login")
+                            self.execute_cmd_tap(415, 354)
+                            time.sleep(5)
+
+                        # Close AR and go to game
+                        vm_manage.close_AR(self.threadID)
+                        time.sleep(self.time_wait_after_nox_reset - 10)
                         vm_manage.start_app(self.threadID)
                         time.sleep(2)
                     self.capture_image()
                     self.go_to_home()
+                
+                # Return home if in fight
+                if (self.check_FIGHT_RECOVER()):
+                    self.click_FIGHT_RECOVER()
+                    self.freeze_time = time.time()
+                    while not self.check_IN_FIGHTING():
+                        self.capture_image()
+                        if time.time() - self.freeze_time > self.time_check_freeze:
+                            self.start_time = time.time() - self.time_to_reset_nox
+                            break
+                    self.execute_cmd_tap(427, 20)
+                    time.sleep(2)
+                    self.execute_cmd_tap(219, 430)
+                    time.sleep(2)
+                    self.execute_cmd_tap(506, 273)
+                    time.sleep(3)
+                    self.go_to_home()
+
 
             if self.check_FIGHT_BUTTON():
                 print("DEBUG === Claim reward yet? {}".format(self.claim_and_help_once_session))
@@ -246,7 +342,7 @@ class memu_process_class (threading.Thread):
                     self.claim_history_time = time.time()
 
             if self.check_file_is_not_modified_in_10mins():
-                self.start_time = time.time() + 3601
+                self.start_time = time.time() - self.time_to_reset_nox
 
             if self.mode_arena < 0:
                 self.mode_arena = len(self.arr_mode) - 1
@@ -274,7 +370,7 @@ class memu_process_class (threading.Thread):
                         break
                     elif self.check_RECONNECT() or self.check_RECONNECT_MAINTAINANCE():
                         time.sleep(self.time_to_wait_then_reconnect)
-                        self.start_time = time.time() - 3601
+                        self.start_time = time.time() - self.time_to_reset_nox
                         break
                     elif self.check_IN_LOADING():
                         print("IN LOADING +++++++++ {}".format(time.time() - self.freeze_time))
@@ -282,7 +378,7 @@ class memu_process_class (threading.Thread):
                             self.freeze_time = time.time()
                             self.flag_check_loading = True
                         elif time.time() - self.freeze_time > self.time_check_freeze:
-                            self.start_time = time.time() + 3601
+                            self.start_time = time.time() - self.time_to_reset_nox
                             break
                     elif self.check_achived():
                         self.click_claim_achive()
@@ -345,7 +441,7 @@ class memu_process_class (threading.Thread):
                     self.freeze_time = time.time()
                     self.flag_check_loading = True
                 elif time.time() - self.freeze_time > self.time_check_freeze:
-                    self.start_time = time.time() - 3601
+                    self.start_time = time.time() - self.time_to_reset_nox
             elif self.check_NEXT_FIGHT():
                 self.click_NEXT_FIGHT()
             elif self.check_CONTINUE() or self.check_BACK_TO_ARENA():
@@ -495,7 +591,7 @@ class memu_process_class (threading.Thread):
         for item in self.time_to_run_mode:
             now = datetime.datetime.now()
             print(now.year, now.month, now.day, now.hour, now.minute, now.second)
-            if (item["time_start"]["hour"] < now.hour or now.hour < item["time_end"]["hour"]):
+            if (item["time_start"]["hour"] < now.hour and now.hour < item["time_end"]["hour"]):
                 return item
             elif (item["time_start"]["hour"] == now.hour) and (now.hour < item["time_end"]["hour"]):
                 if item["time_start"]["minute"] <= now.minute:

@@ -18,6 +18,14 @@
                 {
                     "time": "14:41-14:50",
                     "mode": [4,3,0,2]
+                },
+                {
+                    "time": "21:41-23:59",
+                    "mode": [4,3,0,2]
+                },
+                {
+                    "time": "00:00-12:59",
+                    "mode": [4,3,0,2]
                 }
             ]
         },
@@ -70,5 +78,6 @@
     "time_get_reward_and_help_to": "23:00",
     "time_check_freeze": 600,
     "time_to_wait_then_reconnect": 10,
-    "time_reset_claim_reward": 7200
+    "time_reset_claim_reward": 7200,
+    "time_wait_after_nox_reset": 50
 }
