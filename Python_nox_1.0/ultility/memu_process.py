@@ -91,82 +91,72 @@ class memu_process_class (threading.Thread):
     def run(self):
 
         # Launch AR once
-        vm_manage.open_AR(self.threadID)
-        time.sleep(self.time_wait_after_nox_reset)
-        # Check Login AR
-        self.execute_cmd_swipe(800, 400, 800, 20)
-        self.capture_image()
-        if self.check_AR_LOGGED_OUT():
-            print("DEBUG === click username field")
-            self.execute_cmd_tap(141, 76)
-            print("DEBUG === input username: {}".format(self.account_name))
-            self.execute_cmd_input_text(self.account_name)
-            print("DEBUG === click password field")
-            self.execute_cmd_tap(112, 247)
-            print("DEBUG === input username: {}".format(self.account_password))
-            self.execute_cmd_input_text(self.account_password)
-            print("DEBUG === click Login")
-            self.execute_cmd_tap(415, 354)
-            time.sleep(5)
+        # vm_manage.open_AR(self.threadID)
+        # time.sleep(self.time_wait_after_nox_reset)
+        # # Check Login AR
+        # self.execute_cmd_swipe(800, 400, 800, 20)
+        # self.capture_image()
+        # if self.check_AR_LOGGED_OUT():
+        #     print("DEBUG === click username field")
+        #     self.execute_cmd_tap(141, 76)
+        #     time.sleep(3)
+        #     print("DEBUG === input username: {}".format(self.account_name))
+        #     self.execute_cmd_input_text(self.account_name)
+        #     time.sleep(3)
+        #     print("DEBUG === click password field")
+        #     self.execute_cmd_tap(112, 247)
+        #     time.sleep(3)
+        #     print("DEBUG === input username: {}".format(self.account_password))
+        #     self.execute_cmd_input_text(self.account_password)
+        #     time.sleep(3)
+        #     print("DEBUG === click Login")
+        #     self.execute_cmd_tap(415, 354)
+        #     time.sleep(5)
 
-        # Close AR and go to game
-        vm_manage.close_AR(self.threadID)
-        time.sleep(self.time_wait_after_nox_reset)
-        vm_manage.start_app(self.threadID)
-        while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS() and not self.check_SPECIAL_GIFT() and not self.check_RECONNECT() and not self.check_RECONNECT_MAINTAINANCE():
-            # vm_manage.start_app(self.threadID)
-            if self.check_CANNOT_OPEN_APP():
-                vm_manage.start_app(self.threadID)
-            elif self.check_CrashApp():
-                vm_manage.reboot_vm(self.threadID)
-                time.sleep(self.time_wait_after_nox_reset)
-                vm_manage.open_AR(self.threadID)
-                time.sleep(self.time_wait_after_nox_reset - 20)
-                # Check Login AR
-                self.execute_cmd_swipe(800, 400, 800, 20)
-                self.capture_image()
-                if self.check_AR_LOGGED_OUT():
-                    print("DEBUG === click username field")
-                    self.execute_cmd_tap(141, 76)
-                    print("DEBUG === input username: {}".format(self.account_name))
-                    self.execute_cmd_input_text(self.account_name)
-                    print("DEBUG === click password field")
-                    self.execute_cmd_tap(112, 247)
-                    print("DEBUG === input username: {}".format(self.account_password))
-                    self.execute_cmd_input_text(self.account_password)
-                    print("DEBUG === click Login")
-                    self.execute_cmd_tap(415, 354)
-                    time.sleep(5)
+        # # Close AR and go to game
+        # vm_manage.close_AR(self.threadID)
+        # time.sleep(self.time_wait_after_nox_reset)
+        # vm_manage.start_app(self.threadID)
+        # while not self.check_TODAY_REWARD() and not self.check_FIGHT_BUTTON() and not self.check_FIGHT_RECOVER() and not self.check_INCURSIONS() and not self.check_SPECIAL_GIFT() and not self.check_RECONNECT() and not self.check_RECONNECT_MAINTAINANCE():
+        #     # vm_manage.start_app(self.threadID)
+        #     if self.check_CANNOT_OPEN_APP():
+        #         vm_manage.start_app(self.threadID)
+        #     elif self.check_CrashApp():
+        #         vm_manage.reboot_vm(self.threadID)
+        #         time.sleep(self.time_wait_after_nox_reset)
+        #         vm_manage.open_AR(self.threadID)
+        #         time.sleep(self.time_wait_after_nox_reset - 20)
+        #         # Check Login AR
+        #         self.execute_cmd_swipe(800, 400, 800, 20)
+        #         self.capture_image()
+        #         if self.check_AR_LOGGED_OUT():
+        #             print("DEBUG === click username field")
+        #             self.execute_cmd_tap(141, 76)
+        #             time.sleep(3)
+        #             self.execute_cmd_clear_text()
+        #             time.sleep(3)
+        #             print("DEBUG === input username: {}".format(self.account_name))
+        #             self.execute_cmd_input_text(self.account_name)
+        #             time.sleep(3)
+        #             print("DEBUG === click password field")
+        #             self.execute_cmd_tap(112, 247)
+        #             time.sleep(3)
+        #             self.execute_cmd_clear_text()
+        #             time.sleep(3)
+        #             print("DEBUG === input username: {}".format(self.account_password))
+        #             self.execute_cmd_input_text(self.account_password)
+        #             time.sleep(3)
+        #             print("DEBUG === click Login")
+        #             self.execute_cmd_tap(415, 354)
+        #             time.sleep(5)
 
-                # Close AR and go to game
-                vm_manage.close_AR(self.threadID)
-                time.sleep(self.time_wait_after_nox_reset - 10)
-                vm_manage.start_app(self.threadID)
-                time.sleep(2)
-            self.capture_image()
-            self.go_to_home()
-
-        # Return home if in fight
-        if (self.check_FIGHT_RECOVER()):
-            self.click_FIGHT_RECOVER()
-            self.freeze_time = time.time()
-            while not self.check_IN_FIGHTING():
-                self.capture_image()
-                print(time.time() - self.freeze_time > self.time_check_freeze)
-                if time.time() - self.freeze_time > self.time_check_freeze:
-                    self.start_time = time.time() - self.time_to_reset_nox
-                    break
-                pass
-            print("click pause")
-            self.execute_cmd_tap(427, 20)
-            time.sleep(2)
-            print("click quit")
-            self.execute_cmd_tap(219, 430)
-            time.sleep(2)
-            print("click quit")
-            self.execute_cmd_tap(506, 273)
-            time.sleep(3)
-            self.go_to_home()
+        #         # Close AR and go to game
+        #         vm_manage.close_AR(self.threadID)
+        #         time.sleep(self.time_wait_after_nox_reset - 10)
+        #         vm_manage.start_app(self.threadID)
+        #         time.sleep(2)
+        #     self.capture_image()
+        #     self.go_to_home()
 
        
         while self.process_running:
@@ -203,11 +193,15 @@ class memu_process_class (threading.Thread):
                     print("DEBUG === click username field")
                     self.execute_cmd_tap(141, 76)
                     time.sleep(3)
+                    self.execute_cmd_clear_text()
+                    time.sleep(3)
                     print("DEBUG === input username: {}".format(self.account_name))
                     self.execute_cmd_input_text(self.account_name)
                     time.sleep(3)
                     print("DEBUG === click password field")
                     self.execute_cmd_tap(112, 247)
+                    time.sleep(3)
+                    self.execute_cmd_clear_text()
                     time.sleep(3)
                     print("DEBUG === input username: {}".format(self.account_password))
                     self.execute_cmd_input_text(self.account_password)
@@ -236,12 +230,20 @@ class memu_process_class (threading.Thread):
                         if self.check_AR_LOGGED_OUT():
                             print("DEBUG === click username field")
                             self.execute_cmd_tap(141, 76)
+                            time.sleep(3)
+                            self.execute_cmd_clear_text()
+                            time.sleep(3)
                             print("DEBUG === input username: {}".format(self.account_name))
                             self.execute_cmd_input_text(self.account_name)
+                            time.sleep(3)
                             print("DEBUG === click password field")
                             self.execute_cmd_tap(112, 247)
+                            time.sleep(3)
+                            self.execute_cmd_clear_text()
+                            time.sleep(3)
                             print("DEBUG === input username: {}".format(self.account_password))
                             self.execute_cmd_input_text(self.account_password)
+                            time.sleep(3)
                             print("DEBUG === click Login")
                             self.execute_cmd_tap(415, 354)
                             time.sleep(5)
@@ -252,23 +254,6 @@ class memu_process_class (threading.Thread):
                         vm_manage.start_app(self.threadID)
                         time.sleep(2)
                     self.capture_image()
-                    self.go_to_home()
-                
-                # Return home if in fight
-                if (self.check_FIGHT_RECOVER()):
-                    self.click_FIGHT_RECOVER()
-                    self.freeze_time = time.time()
-                    while not self.check_IN_FIGHTING():
-                        self.capture_image()
-                        if time.time() - self.freeze_time > self.time_check_freeze:
-                            self.start_time = time.time() - self.time_to_reset_nox
-                            break
-                    self.execute_cmd_tap(427, 20)
-                    time.sleep(2)
-                    self.execute_cmd_tap(219, 430)
-                    time.sleep(2)
-                    self.execute_cmd_tap(506, 273)
-                    time.sleep(3)
                     self.go_to_home()
 
 
@@ -419,7 +404,7 @@ class memu_process_class (threading.Thread):
                 for i in range(number):
                     self.swipe_to_another_arena_mode()
                 time.sleep(1)
-                if self.mode_arena == len(self.arr_mode) - 1 and number == 0:
+                if self.mode_arena == len(self.arr_mode) - 1 and number == -1:
                     self.click_continue_arena_3vs_3_3star()
                 elif self.mode_arena == len(self.arr_mode) - 1:
                     self.click_continue_arena_on_right()
@@ -1891,7 +1876,21 @@ class memu_process_class (threading.Thread):
                     res = False
                     break
             print(res)
-            return res
+
+            arr = [[  0,   0, 119], [  0,   0, 119], [216, 216, 234], [219, 219, 236], [211, 211, 232], [211, 211, 232], [215, 215, 234], [240, 240, 247], [183, 183, 217], [ 12,  12, 125], [ 14,  14, 126], [249, 249, 252], [127, 127, 187], [ 96,  96, 170], [ 96,  96, 170], [ 96,  96, 170], [ 94,  94, 169], [ 23,  23, 131], [  0,   0, 119], [ 63,  63, 153], [193, 193, 222], [  0,   0, 119], [ 13,  13, 126], [228, 228, 241], [ 20,  20, 130], [  0,   0, 119], [ 36,  36, 138], [217, 217, 235], [  3,   3, 121], [  0,   0, 119], [209, 209, 230], [ 36,  36, 138], [  0,   0, 119], [  0,   0, 119], [ 58,  58, 150], [203, 203, 227], [  0,   0, 119], [  0,   0, 119], [  7,   7, 123], [217, 217, 235]]
+
+            res2 = True
+
+            x = 129
+            x1 = 169
+            y = 75
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res2 = False
+                    break
+            print(res2)
+            return res or res2
         except:
             return False
 
@@ -2091,6 +2090,11 @@ class memu_process_class (threading.Thread):
 
     def execute_cmd_input_text(self, text):
         cmd = 'nox_adb.exe -s {} shell input text {}'.format(self.device_name, text)
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        retval = p.wait()
+
+    def execute_cmd_clear_text(self):
+        cmd = 'nox_adb.exe -s {} shell input keyevent KEYCODE_CLEAR'
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 

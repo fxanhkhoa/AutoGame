@@ -8,8 +8,8 @@
             "name": "Nox 1",
             "mode_list": [
                 {
-                    "time": "14:30-20:00",
-                    "mode": [0,1,3,0]
+                    "time": "00:30-23:50",
+                    "mode": [-1,0,1,2]
                 },
                 {
                     "time": "14:33-14:40",
@@ -75,9 +75,9 @@
     "claim_reward": 1,
     "claim_help": 0,
     "time_get_reward_and_help_from": "15:00",
-    "time_get_reward_and_help_to": "23:00",
+    "time_get_reward_and_help_to": "24:00",
     "time_check_freeze": 600,
-    "time_to_wait_then_reconnect": 10,
+    "time_to_wait_then_reconnect": 40,
     "time_reset_claim_reward": 7200,
-    "time_wait_after_nox_reset": 50
+    "time_wait_after_nox_reset": 10
 }
