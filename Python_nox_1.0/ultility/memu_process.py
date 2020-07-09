@@ -5,6 +5,7 @@ import os
 import cv2
 import numpy as np
 import datetime
+import json
 from ultility.check_match_done import check_match_done
 from ultility.vm_management import vm_manage
 
@@ -13,7 +14,7 @@ class memu_process_class (threading.Thread):
     process_running = True
     flag_exist_GET_MORE = False
 
-    def __init__(self, threadID, pic_folder, log_file, num_of_mode, device_name, account_name, account_password, time_to_reset_nox, claim_reward, claim_help, time_get_reward_and_help_from, time_get_reward_and_help_to, time_check_freeze, time_to_wait_then_reconnect, time_reset_claim_reward, time_wait_after_nox_reset, check_loading_pattern):
+    def __init__(self, threadID, pic_folder, log_file, num_of_mode, device_name, account_name, account_password, time_to_reset_nox, claim_reward, claim_help, time_get_reward_and_help_from, time_get_reward_and_help_to, time_check_freeze, time_to_wait_then_reconnect, time_reset_claim_reward, time_wait_after_nox_reset, pattern_file):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.pic_folder = pic_folder
@@ -21,6 +22,13 @@ class memu_process_class (threading.Thread):
         self.device_name = device_name
         self.try_count = 0
         self.try_count_when_auto_hit = 0
+        self.pattern_file = pattern_file
+
+        f = open(self.pattern_file, "r")
+        jsonStr = f.read()
+
+        self.pattern_obj = json.loads(jsonStr)
+        f.close()
 
         # TODO: Get Time to time_to_run_mode
         self.mode_list = num_of_mode["mode_list"]
@@ -78,8 +86,6 @@ class memu_process_class (threading.Thread):
         self.claim_history_time = time.time()
 
         self.time_reset_claim_reward = time_reset_claim_reward
-
-        self.check_loading_pattern = check_loading_pattern
 
         # connect with emulator
         print("DEBUG === Connect to {}".format(self.device_name))
@@ -178,7 +184,7 @@ class memu_process_class (threading.Thread):
             
             if time.time() - self.start_time > self.time_to_reset_nox:
                 # Refresh mode
-                print("choose: ",self.get_pick_mode())   
+                print("choose: ",self.get_pick_mode())
                 self.current_object = self.get_pick_mode()
                 self.arr_mode = self.current_object["mode"]
                 self.mode_arena = len(self.arr_mode) - 1
@@ -395,7 +401,14 @@ class memu_process_class (threading.Thread):
                 self.go_to_fight()
             elif self.check_PLAY_ARENA():
                 self.freeze_time = time.time()
-                self.go_to_arena()
+                if (self.check_ARENA_TEXT()):
+                    self.go_to_arena()
+                    continue
+                if (not self.check_ARENA_TEXT()):
+                    self.execute_cmd_swipe(400, 283, 35, 283)
+                    time.sleep(1)
+                    self.execute_cmd_tap(769, 158)
+                    continue
             elif self.check_IN_CRYSTAL():
                 self.mode_arena = self.mode_arena - 1
                 self.go_to_home()
@@ -405,8 +418,13 @@ class memu_process_class (threading.Thread):
                     self.arr_mode = self.current_object["mode"]
                     self.mode_arena = len(self.arr_mode) - 1
                 number = self.arr_mode[self.mode_arena]
-                self.execute_cmd_swipe(180, 283, 50, 283)
+                print(self.pattern_obj["SWIPE_BO_COT_DAU"][0], self.pattern_obj["SWIPE_BO_COT_DAU"][1], self.pattern_obj["SWIPE_BO_COT_DAU"][2], self.pattern_obj["SWIPE_BO_COT_DAU"][3])
+                self.execute_cmd_swipe(self.pattern_obj["SWIPE_BO_COT_DAU"][0], self.pattern_obj["SWIPE_BO_COT_DAU"][1], self.pattern_obj["SWIPE_BO_COT_DAU"][2], self.pattern_obj["SWIPE_BO_COT_DAU"][3])
+                # self.execute_cmd_swipe(190, 283, 35, 283)
+                time.sleep(1)
                 print(number)
+                if number == -1:
+                    self.execute_cmd_tap(316, 271)
                 for i in range(number):
                     self.swipe_to_another_arena_mode()
                 time.sleep(1)
@@ -617,12 +635,12 @@ class memu_process_class (threading.Thread):
 
     def go_to_arena(self):
         print("DEBUG === GO TO ARENA {}".format(self.device_name))
-        self.execute_cmd_tap(415, 248)
+        self.execute_cmd_tap(self.pattern_obj["NUT_ARENA"]["click_point"][0], self.pattern_obj["NUT_ARENA"]["click_point"][1])
         time.sleep(4)
 
     def click_continue_arena_3vs_3_3star(self):
         print("DEBUG === CONTINUE TO ARENA {}".format(self.device_name))
-        self.execute_cmd_tap(186, 289)
+        self.execute_cmd_tap(self.pattern_obj["CLICK_COT"]["BEN_TRAI"][0], self.pattern_obj["CLICK_COT"]["BEN_TRAI"][1])
         time.sleep(1)
 
     def check_GET_MORE(self):
@@ -982,13 +1000,13 @@ class memu_process_class (threading.Thread):
             # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
-            arr = [[199, 219, 199], [169, 200, 170], [169, 200, 170], [166, 198, 167], [141, 182, 142], [ 60, 130,  62], [ 0, 92,  2], [ 0, 92,  2], [214, 229, 214], [ 78, 142,  79], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [197, 218, 197], [ 71, 137,  72], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [220, 233, 220], [ 28, 110,  30], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 85, 146,  86], [182, 208, 183], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 0, 92,  2], [ 14, 101,  16], [220, 233, 220], [ 55, 127,  57], [ 0, 92,  2], [ 0, 92,  2], [ 19, 104,  21], [232, 240, 232], [ 22, 106,  24], [ 0, 92,  2], [ 62, 132,  64], [245, 249, 245], [137, 180, 138], [126, 173, 127], [126, 173, 127], [136, 179, 137], [207, 224, 207], [192, 215, 192], [ 8, 97, 10], [ 25, 108,  27], [209, 226, 209]]
+            arr = self.pattern_obj["NUT_ARENA"]["parttern"]
 
             res = True
 
-            x = 373
-            x1 = 430
-            y = 388
+            x = self.pattern_obj["NUT_ARENA"]["y_from"]
+            x1 = self.pattern_obj["NUT_ARENA"]["y_to"]
+            y = self.pattern_obj["NUT_ARENA"]["x"]
 
             for i in range(x, x1):
                 if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
@@ -1529,13 +1547,13 @@ class memu_process_class (threading.Thread):
             # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
-            arr = self.check_loading_pattern
+            arr = self.pattern_obj["MAU_LOADING"]["parttern"]
 
             res = True
 
-            x = 520
-            x1 = 570
-            y = 84
+            x = self.pattern_obj["MAU_LOADING"]["y_from"]
+            x1 = self.pattern_obj["MAU_LOADING"]["y_to"]
+            y = self.pattern_obj["MAU_LOADING"]["x"]
 
             for i in range(x, x1):
                 # print(image[y][i], arr[i - x])
@@ -2020,6 +2038,44 @@ class memu_process_class (threading.Thread):
         except:
             return False   
 
+    def check_ARENA_TEXT(self):
+        try:
+            print("DEBUG === check_ARENA_TEXT")
+            # self.capture_image()
+            image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
+            
+            arr = [[146, 159, 161], [ 86, 105, 109], [133, 147, 149], [255, 255, 255], [234, 237, 237], [52, 77, 81], [46, 71, 76], [212, 217, 218], [255, 255, 255], [250, 251, 251], [249, 250, 250], [252, 252, 252], [255, 255, 255], [229, 227, 228], [112, 101, 107], [31, 15, 24], [121, 111, 116], [255, 255, 255]]
+
+            res = True
+
+            x = 719
+            x1 = 737
+            y = 242
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res = False
+                    break
+            print(res)
+
+            arr = [[103, 122, 125], [106, 123, 125], [182, 191, 192], [255, 255, 255], [166, 176, 177], [42, 67, 72], [ 97, 116, 119], [255, 255, 255], [253, 254, 254], [246, 248, 248], [246, 248, 248], [253, 254, 254], [254, 254, 254], [156, 149, 154], [55, 39, 48], [38, 23, 31], [209, 206, 208], [255, 255, 255], [206, 202, 204], [182, 177, 179], [182, 177, 179]]
+
+            res2 = True
+
+            x = 580
+            x1 = 601
+            y = 414
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res2 = False
+                    break
+            print(res2)
+
+            return res or res2
+        except:
+            return False  
+
     def check_IN_DIALY_QUEST(self):
         try:
             print("DEBUG === check_IN_DIALY_QUEST")
@@ -2088,7 +2144,7 @@ class memu_process_class (threading.Thread):
 
     def click_continue_arena_on_right(self):
         print("DEBUG === click_continue_arena_on_right")
-        self.execute_cmd_tap(577, 291)
+        self.execute_cmd_tap(self.pattern_obj["CLICK_COT"]["BEN_PHAI"][0], self.pattern_obj["CLICK_COT"]["BEN_PHAI"][1])
         time.sleep(1)
 
     def capture_image_for_FREEZE(self):
@@ -2105,12 +2161,12 @@ class memu_process_class (threading.Thread):
         retval = p.wait()
 
     def execute_cmd_tap(self, x, y):
-        cmd = 'adb.exe -s {} shell input tap {} {}'.format(self.device_name, x, y)
+        cmd = 'nox_adb.exe -s {} shell input tap {} {}'.format(self.device_name, x, y)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 
     def execute_cmd_swipe(self, x, y, z, t):
-        cmd = 'adb.exe -s {} shell input swipe {} {} {} {}'.format(self.device_name, x, y, z, t)
+        cmd = 'nox_adb.exe -s {} shell input swipe {} {} {} {}'.format(self.device_name, x, y, z, t)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         retval = p.wait()
 

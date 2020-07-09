@@ -2,8 +2,14 @@ import subprocess
 import os
 import cv2
 import numpy as np
+import json
 
 lower = np.uint8([0,0,0])
+f = open("info.json", "r")
+jsonStr = f.read()
+
+config_obj = json.loads(jsonStr)
+f.close()
 
 def click_and_crop(event, x, y, flags, param):
     # grab references to the global variables
@@ -14,17 +20,17 @@ def click_and_crop(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         refPt = [(x, y)]
         cropping = True
-        print(x, y)
+        print('toa do vua click', x, y)
         # BGR color
         print(image[y][x])
         arr = []
         arr2 = []
         print(image.shape)
-        for i in range(520, 570):
+        for i in range(config_obj["y_from"], config_obj["y_to"]):
             #print(image[584][i])
-            arr.append(image[84][i])
+            arr.append(image[config_obj["x"]][i])
             # cv2.circle(image,(i, 300), 10, (255,0,255))
-        print(arr)
+        print('mang mau = ',arr)
         # print("==============")
         # for i in range(455, 505):
         #     #print(image[473][i])
@@ -72,28 +78,28 @@ def nothing(x):
 
 # adb connect localhost:21503
 
-# wd = os.getcwd()
-# os.chdir("C:\\adb")
+wd = os.getcwd()
+os.chdir("C:\\adb")
 
-# p = subprocess.Popen('adb connect localhost:62001', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+p = subprocess.Popen('adb connect localhost:62001', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 # for line in p.stdout.readlines():
 #     print (line)
 
-# retval = p.wait()
+retval = p.wait()
 
-# p = subprocess.Popen("adb exec-out screencap -p", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+p = subprocess.Popen("adb exec-out screencap -p", shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 # print(p.stdout.read())
-# image_bytes = p.stdout.read().replace(b'\r\n', b'\n')
+image_bytes = p.stdout.read().replace(b'\r\n', b'\n')
 
 # # print(image_bytes)
 # # f = open('screenCap.png', 'wb')
 # # f.write(image_bytes)
 # # f.close()
-# nparr = np.frombuffer(image_bytes, np.uint8)
-# image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+nparr = np.frombuffer(image_bytes, np.uint8)
+image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 # print(os.path.exists('screen0 - Copy.png'))
-image = cv2.imread('screen0.png')
+# image = cv2.imread('screen0.png')
 
 # retval = p.wait()
 
