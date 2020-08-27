@@ -401,14 +401,18 @@ class memu_process_class (threading.Thread):
                 self.go_to_fight()
             elif self.check_PLAY_ARENA():
                 self.freeze_time = time.time()
-                if (self.check_ARENA_TEXT()):
-                    self.go_to_arena()
-                    continue
-                if (not self.check_ARENA_TEXT()):
-                    self.execute_cmd_swipe(400, 283, 35, 283)
-                    time.sleep(1)
-                    self.execute_cmd_tap(769, 158)
-                    continue
+                # if (self.check_ARENA_TEXT()):
+                #     self.go_to_arena()
+                #     continue
+                # if (not self.check_ARENA_TEXT()):
+                #     self.execute_cmd_swipe(813, 259, 448, 259)
+                #     time.sleep(1)
+                #     self.execute_cmd_swipe(813, 259, 448, 259)
+                #     time.sleep(1)
+                #     self.execute_cmd_swipe(813, 259, 448, 259)
+                #     time.sleep(1)
+                #     # self.execute_cmd_tap(769, 158)
+                #     continue
             elif self.check_IN_CRYSTAL():
                 self.mode_arena = self.mode_arena - 1
                 self.go_to_home()
@@ -650,11 +654,11 @@ class memu_process_class (threading.Thread):
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             res = True
             
-            arr = [[ 0, 92,  1], [227, 237, 227], [ 0, 92,  1], [ 0, 92,  1], [ 49, 123,  50], [106, 160, 107], [106, 160, 107], [148, 187, 148], [236, 243, 236], [ 20, 105,  21], [228, 238, 228], [ 17, 103,  18], [ 0, 92,  1], [ 0, 92,  1], [ 0, 92,  1], [ 0, 92,  1], [ 0, 92,  1], [ 0, 92,  1], [ 0, 92,  1], [ 0, 92,  1], [205, 223, 205], [ 55, 127,  56], [ 0, 92,  1], [ 0, 92,  1]]
+            arr = [[ 0, 92,  1]]
 
-            x = 257
-            x1 = 281
-            y = 272
+            x = 261
+            x1 = 262
+            y = 280
 
             for i in range(x, x1):
                 if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
@@ -733,7 +737,7 @@ class memu_process_class (threading.Thread):
 
             print(res4)
 
-            res2 = res2 or res3
+            res2 = res2 or res3 or res4
 
             if res1 and res2:
                 self.execute_cmd_tap(240, 197)
@@ -1236,7 +1240,7 @@ class memu_process_class (threading.Thread):
             # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
-            arr = [[ 7, 83,  8], [ 6, 83,  8], [ 6, 84,  8], [155, 186, 156], [155, 187, 156], [155, 187, 156], [155, 186, 156], [ 7, 82,  9], [ 7, 83,  8], [ 6, 83,  8], [ 6, 84,  8], [156, 187, 156], [155, 187, 156], [155, 186, 156], [156, 186, 157], [ 6, 83,  8], [ 6, 84,  8]]
+            arr = [[ 7, 83,  8], [ 6, 83,  8], [ 6, 83,  8], [134, 172, 135], [155, 186, 156], [155, 186, 156], [151, 183, 152], [ 6, 83,  8], [ 6, 83,  8], [ 6, 83,  8], [ 6, 83,  8], [151, 183, 152], [155, 186, 156], [155, 186, 156], [134, 172, 135], [ 6, 83,  8], [ 6, 83,  8]]
 
             res = True
 
@@ -1377,7 +1381,8 @@ class memu_process_class (threading.Thread):
                     res = False
                     break
             print(res)
-            return res
+            # return res
+            return False
         except:
             return False
 
@@ -2011,7 +2016,8 @@ class memu_process_class (threading.Thread):
                     res = False
                     break
             print(res)
-            return res
+            # return res
+            return False
         except:
             return False 
 
@@ -2044,13 +2050,13 @@ class memu_process_class (threading.Thread):
             # self.capture_image()
             image = cv2.imread(self.pic_folder + "/screen{}.png".format(self.threadID))
             
-            arr = [[146, 159, 161], [ 86, 105, 109], [133, 147, 149], [255, 255, 255], [234, 237, 237], [52, 77, 81], [46, 71, 76], [212, 217, 218], [255, 255, 255], [250, 251, 251], [249, 250, 250], [252, 252, 252], [255, 255, 255], [229, 227, 228], [112, 101, 107], [31, 15, 24], [121, 111, 116], [255, 255, 255]]
+            arr = [[245, 247, 247], [245, 246, 246], [50, 73, 77], [ 90, 108, 111], [251, 251, 251], [197, 204, 205], [41, 67, 72], [44, 68, 72], [162, 172, 174], [255, 255, 255], [234, 237, 237], [217, 223, 224], [225, 226, 226], [239, 239, 239], [255, 255, 255], [252, 252, 252], [93, 81, 88], [80, 68, 75], [255, 255, 255], [255, 255, 255]]
 
             res = True
 
-            x = 719
-            x1 = 737
-            y = 242
+            x = 579
+            x1 = 599
+            y = 413
 
             for i in range(x, x1):
                 if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
@@ -2072,7 +2078,21 @@ class memu_process_class (threading.Thread):
                     break
             print(res2)
 
-            return res or res2
+            arr = [[105, 122, 125], [140, 153, 155], [255, 255, 255], [242, 244, 244], [57, 82, 84], [45, 71, 76], [210, 216, 217], [255, 255, 255], [247, 248, 248], [246, 247, 248], [250, 251, 251], [255, 255, 255], [226, 225, 226], [92, 79, 87], [33, 15, 26], [117, 107, 113], [255, 255, 255], [239, 238, 238], [184, 179, 182], [182, 176, 179], [182, 177, 179]]
+
+            res3 = True
+
+            x = 580
+            x1 = 601
+            y = 414
+
+            for i in range(x, x1):
+                if image[y][i][0] not in range(arr[i - x][0] - 2, arr[i - x][0] + 2) or image[y][i][1] not in range(arr[i - x][1] - 2, arr[i - x][1] + 2) or image[y][i][2] not in range(arr[i - x][2] - 2, arr[i - x][2] + 2):
+                    res3 = False
+                    break
+            print(res3)
+
+            return res or res2 or res3
         except:
             return False  
 
